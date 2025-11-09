@@ -17,7 +17,7 @@ interface CalendlyWebhookRequest extends Request {
  * POST /webhooks/calendly
  * Reçoit le webhook Calendly et déclenche le workflow complet
  */
-router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response): Promise<void> => {
+router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
   try {
     // 1. Valider la signature HMAC
     const signature = req.headers['calendly-webhook-signature'] as string;
