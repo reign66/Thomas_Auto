@@ -1,0 +1,22 @@
+# Cursor Rules for Lovable Automation
+
+This project is ready for Railway deployment.
+
+## Project Type
+Node.js + TypeScript + Express
+
+## Build & Deploy
+- Build: `npm run build`
+- Start: `npm start`
+- Railway config: `railway.json` present
+- Health check: `/health`
+
+## Environment Variables Required
+- CALENDLY_WEBHOOK_SECRET
+- ANTHROPIC_API_KEY
+- NOTION_API_KEY
+- NOTION_DATABASE_ID
+- APP_URL
+
+## Status
+✅ Ready for deployment

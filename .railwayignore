@@ -1,0 +1,13 @@
+# Fichiers à ignorer lors du déploiement Railway
+node_modules/
+.env
+.env.local
+*.log
+logs/
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+coverage/
+.nyc_output/
