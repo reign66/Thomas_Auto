@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from 'express';
  */
 export function rawBodyMiddleware(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void {
   // Seulement pour la route /webhooks/calendly
