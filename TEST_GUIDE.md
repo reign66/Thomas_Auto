@@ -86,11 +86,17 @@ Votre base Notion "Stratégie Commercial" doit avoir ces colonnes :
 2. Cliquez sur **New webhook**
 3. Configurez :
    - **Event** : Sélectionnez `invitee.created` (quand un rendez-vous est confirmé)
-   - **URL** : `https://votre-app.railway.app/webhooks/calendly`
-     - ⚠️ Remplacez par votre URL Railway réelle
+   - **URL** : `https://thomasauto-production.up.railway.app/webhooks/calendly`
+     - ⚠️ Utilisez votre URL Railway réelle (format : `https://votre-app.up.railway.app`)
    - **Signing Key** : Copiez cette clé et mettez-la dans Railway → Variables → `CALENDLY_WEBHOOK_SECRET`
 
 4. Cliquez sur **Add webhook**
+
+⚠️ **IMPORTANT** : Les webhooks Calendly se déclenchent uniquement quand :
+- ✅ Un invité réserve via la **page publique de Calendly** (après avoir cliqué sur "View booking page")
+- ❌ **PAS** quand vous créez un événement via l'API Calendly (`POST /invitees`)
+
+Si vous créez l'événement via l'API puis que l'invité remplit le formulaire sur la page publique, le webhook se déclenchera normalement.
 
 ### 3.2 Configurer les Questions Personnalisées
 
@@ -115,7 +121,9 @@ Votre base Notion "Stratégie Commercial" doit avoir ces colonnes :
 
 ### 4.2 Créer un Rendez-vous de Test
 
-1. Allez sur votre page Calendly publique
+**Option A : Via la page publique Calendly (recommandé pour tester)**
+
+1. Allez sur votre page Calendly publique (ou utilisez "View booking page" après avoir créé un event via l'API)
 2. Sélectionnez un créneau disponible
 3. **Remplissez le formulaire** :
    - **Name** : `Test Prospect` (⚠️ **EXACTEMENT** le même nom que dans Notion)
@@ -123,6 +131,14 @@ Votre base Notion "Stratégie Commercial" doit avoir ces colonnes :
    - **Site Web** : `https://example.com` (ou un vrai site comme `https://www.dei-expertises.fr/`)
 
 4. **Confirmez le rendez-vous**
+
+**Option B : Via l'API Calendly puis page publique**
+
+Si vous créez l'événement via l'API (`POST /invitees`), le webhook ne se déclenchera **PAS** automatiquement. Vous devez :
+1. Créer l'event via l'API
+2. Cliquer sur "View booking page" 
+3. Remplir le formulaire sur la page publique
+4. Confirmer → Le webhook se déclenchera alors
 
 ### 4.3 Observer le Processus
 

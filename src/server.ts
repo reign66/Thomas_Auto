@@ -55,8 +55,8 @@ const PORT = config.port;
 app.listen(PORT, () => {
   logger.info(`🚀 Serveur démarré sur le port ${PORT}`);
   logger.info(`📡 Environnement : ${config.nodeEnv}`);
-  logger.info(`🔗 Health check : http://localhost:${PORT}/health`);
-  logger.info(`📥 Webhook Calendly : http://localhost:${PORT}/webhooks/calendly`);
+  logger.info(`🔗 Health check : ${config.app.url}/health`);
+  logger.info(`📥 Webhook Calendly : ${config.app.url}/webhooks/calendly`);
 });
 
 // Gestion gracieuse de l'arrêt
