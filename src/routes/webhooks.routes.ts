@@ -61,7 +61,7 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
     logger.info('========================================');
 
     // 9. Retourner la réponse
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         prospectName: name,
@@ -81,7 +81,7 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
     }
 
     // Sinon, erreur serveur
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: {
         message: 'Erreur lors du traitement du webhook',
