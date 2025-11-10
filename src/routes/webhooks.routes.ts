@@ -1,9 +1,6 @@
 import express, { Request, Response } from 'express';
 import { validateCalendlySignature, extractCalendlyData } from '../services/calendly.service';
-import { getProspectLogo, updateProspect } from '../services/notion.service';
-import { scrapeWebsite } from '../services/scraper.service';
-import { analyzeWebsite } from '../services/claude.service';
-import { generateLovableUrl } from '../services/lovable.service';
+import { generateSiteWorkflow } from '../workflows/generate-site.workflow';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -32,43 +29,25 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
       });
     }
 
-    // 2. Extraire les données du webhook
-    const { name, email, siteWeb } = extractCalendlyData(req.body);
+    // 2. Extraire le nom du prospect depuis le webhook
+    const { name } = extractCalendlyData(req.body);
 
     logger.info(`🔔 Webhook Calendly reçu pour : ${name}`);
-    logger.info(`📧 Email : ${email}`);
-    logger.info(`🌐 Site Web : ${siteWeb}`);
 
-    // 3. Récupérer le logo depuis Notion
-    const logoUrl = await getProspectLogo(name);
-
-    // 4. Scraper le site web
-    const scrapedContent = await scrapeWebsite(siteWeb);
-
-    // 5. Analyser avec Claude
-    const claudePrompt = await analyzeWebsite(siteWeb, scrapedContent, name);
-
-    // 6. Générer l'URL Lovable
-    const lovableUrl = generateLovableUrl(claudePrompt, logoUrl);
-
-    // 7. Mettre à jour Notion
-    await updateProspect(name, lovableUrl, new Date());
-
-    // 8. Logger l'URL de façon très visible
-    logger.info('========================================');
-    logger.info(`🎯 URL LOVABLE POUR ${name} :`);
-    logger.info(lovableUrl);
-    logger.info('========================================');
-
-    // 9. Retourner la réponse
-    return res.status(200).json({
+    // 3. Retourner 200 OK immédiatement (pour que Calendly ne réessaie pas)
+    res.status(200).json({
       success: true,
-      data: {
-        prospectName: name,
-        lovableUrl,
-        hasLogo: !!logoUrl,
-      },
+      message: 'Webhook reçu, traitement en cours',
     });
+
+    // 4. Lancer le workflow de génération en arrière-plan (asynchrone)
+    // On ne fait pas await pour retourner la réponse immédiatement à Calendly
+    generateSiteWorkflow(name).catch((error: any) => {
+      // Les erreurs sont déjà gérées dans le workflow avec des emails
+      logger.error(`❌ Erreur dans le workflow pour ${name}:`, error.message);
+    });
+
+    return;
   } catch (error: any) {
     logger.error(`❌ Erreur dans le webhook Calendly :`, error.message);
     

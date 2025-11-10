@@ -58,6 +58,7 @@ export function validateCalendlySignature(
 
 /**
  * Extrait les données du webhook Calendly
+ * Note: On extrait seulement le nom car le website vient de Notion
  */
 export function extractCalendlyData(
   payload: CalendlyWebhookPayload
@@ -65,16 +66,17 @@ export function extractCalendlyData(
   const name = payload.invitee?.name || '';
   const email = payload.invitee?.email || '';
   
-  // Chercher la réponse "Site Web" dans questions_and_answers
+  // Chercher la réponse "Site Web" dans questions_and_answers (optionnel maintenant)
   const siteWebAnswer = payload.questions_and_answers?.find(
     (qa) => qa.question === 'Site Web' || qa.question.toLowerCase().includes('site web')
   );
   
   const siteWeb = siteWebAnswer?.answer || '';
 
-  if (!name || !email || !siteWeb) {
+  // Seul le nom est obligatoire maintenant (le website vient de Notion)
+  if (!name) {
     throw new Error(
-      `Données manquantes dans le webhook: name=${!!name}, email=${!!email}, siteWeb=${!!siteWeb}`
+      `Données manquantes dans le webhook: name est requis`
     );
   }
 

@@ -22,6 +22,12 @@ export const config = {
   app: {
     url: process.env.APP_URL || 'http://localhost:3000',
   },
+  
+  email: {
+    resendApiKey: process.env.RESEND_API_KEY || '',
+    from: process.env.EMAIL_FROM || 'notifications@example.com',
+    to: process.env.EMAIL_TO || '',
+  },
 };
 
 // Validation des variables critiques
@@ -39,4 +45,12 @@ if (!config.notion.apiKey) {
 
 if (!config.notion.databaseId) {
   console.warn('⚠️  NOTION_DATABASE_ID non défini');
+}
+
+if (!config.email.resendApiKey) {
+  console.warn('⚠️  RESEND_API_KEY non défini');
+}
+
+if (!config.email.to) {
+  console.warn('⚠️  EMAIL_TO non défini');
 }

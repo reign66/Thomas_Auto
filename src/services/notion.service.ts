@@ -29,10 +29,90 @@ async function retryWithDelay<T>(
   }
 }
 
+export interface ProspectData {
+  name: string;
+  website: string;
+  email: string;
+  phone: string;
+  logoUrl: string | null;
+}
+
 /**
- * Récupère l'URL du logo d'un prospect depuis Notion
+ * Récupère toutes les données d'un prospect depuis Notion (Website + Logo)
+ * @param prospectName Nom exact du prospect dans Notion
+ * @returns Données du prospect ou null si non trouvé
+ */
+export async function getProspectByName(prospectName: string): Promise<ProspectData> {
+  try {
+    logger.info(`🔍 Recherche dans Notion pour : ${prospectName}`);
+
+    const response = await retryWithDelay(async () => {
+      return await notion.databases.query({
+        database_id: config.notion.databaseId,
+        filter: {
+          property: 'Nom Du Prospect',
+          title: {
+            equals: prospectName,
+          },
+        },
+      });
+    });
+
+    if (response.results.length === 0) {
+      throw new Error(`Prospect "${prospectName}" introuvable dans Notion`);
+    }
+
+    const page = response.results[0] as any;
+    const properties = page.properties;
+
+    // Extraire le website
+    const websiteProperty = properties?.Website;
+    const website = websiteProperty?.url || '';
+
+    // Extraire l'email
+    const emailProperty = properties?.Email;
+    const email = emailProperty?.email || '';
+
+    // Extraire le téléphone
+    const phoneProperty = properties?.Téléphone;
+    const phone = phoneProperty?.phone_number || '';
+
+    // Extraire le logo
+    const logoProperty = properties?.Logo;
+    let logoUrl: string | null = null;
+    
+    if (logoProperty && logoProperty.type === 'files') {
+      const files = logoProperty.files;
+      if (files && files.length > 0) {
+        logoUrl = files[0]?.file?.url || null;
+      }
+    }
+
+    logger.info(`✅ Prospect trouvé : ${prospectName}`);
+    if (logoUrl) {
+      logger.info(`🖼️ Logo trouvé : ${logoUrl}`);
+    } else {
+      logger.info(`ℹ️ Pas de logo pour "${prospectName}"`);
+    }
+
+    return {
+      name: prospectName,
+      website,
+      email,
+      phone,
+      logoUrl,
+    };
+  } catch (error: any) {
+    logger.error(`❌ Erreur lors de la récupération du prospect "${prospectName}":`, error.message);
+    throw error;
+  }
+}
+
+/**
+ * Récupère l'URL du logo d'un prospect depuis Notion (fonction legacy, utiliser getProspectByName)
  * @param prospectName Nom exact du prospect dans Notion
  * @returns URL du logo ou null si non trouvé
+ * @deprecated Utiliser getProspectByName à la place
  */
 export async function getProspectLogo(prospectName: string): Promise<string | null> {
   try {
