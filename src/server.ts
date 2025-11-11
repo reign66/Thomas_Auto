@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware pour s'assurer que le body est bien un objet pour /webhooks/calendly
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   if (req.originalUrl === '/webhooks/calendly' && req.method === 'POST' && typeof req.body === 'string') {
     try {
       req.body = JSON.parse(req.body);
