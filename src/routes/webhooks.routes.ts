@@ -23,13 +23,16 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
       (req.headers['x-calendly-webhook-signature'] as string) ||
       (req.headers['calendly-signature'] as string);
     
-    // Log pour debug
-    logger.debug('Headers reçus:', {
-      'calendly-webhook-signature': req.headers['calendly-webhook-signature'] ? 'présent' : 'absent',
-      'x-calendly-webhook-signature': req.headers['x-calendly-webhook-signature'] ? 'présent' : 'absent',
-      'calendly-signature': req.headers['calendly-signature'] ? 'présent' : 'absent',
-      'content-type': req.headers['content-type'],
+    // Log pour debug - logger tous les headers qui contiennent "calendly" ou "signature"
+    const relevantHeaders: Record<string, string> = {};
+    Object.keys(req.headers).forEach(key => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey.includes('calendly') || lowerKey.includes('signature') || lowerKey.includes('x-')) {
+        const value = req.headers[key];
+        relevantHeaders[key] = typeof value === 'string' ? (value.length > 50 ? value.substring(0, 50) + '...' : value) : String(value);
+      }
     });
+    logger.info('🔍 Headers pertinents reçus:', relevantHeaders);
     
     // Utiliser le body brut si disponible, sinon stringify le body parsé
     const bodyString = req.rawBody || JSON.stringify(req.body);
