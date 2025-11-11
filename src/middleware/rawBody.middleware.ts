@@ -26,9 +26,16 @@ export function rawBodyMiddleware(
       try {
         req.body = JSON.parse(data);
       } catch (e) {
+        // Si le parsing échoue, on garde le body vide mais on garde rawBody
         req.body = {};
       }
       next();
+    });
+    
+    // Gérer les erreurs de stream
+    req.on('error', (err) => {
+      console.error('Erreur lors de la lecture du body:', err);
+      next(err);
     });
   } else {
     next();

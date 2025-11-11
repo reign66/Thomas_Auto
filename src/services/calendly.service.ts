@@ -37,8 +37,13 @@ export function validateCalendlySignature(
   // Si pas de signature fournie mais secret configuré, refuser
   if (!signature) {
     logger.error('❌ Signature manquante dans les headers');
+    logger.debug('Headers disponibles:', Object.keys({})); // Pour debug
     return false;
   }
+
+  // Log pour debug (sans exposer la signature complète)
+  logger.debug(`🔍 Signature reçue: ${signature.substring(0, 20)}... (longueur: ${signature.length})`);
+  logger.debug(`🔍 Signature commence par: "${signature.substring(0, 10)}"`);
 
   const hmac = crypto.createHmac('sha256', config.calendly.webhookSecret);
   const digest = hmac.update(body).digest('base64');
@@ -46,14 +51,22 @@ export function validateCalendlySignature(
 
   // Vérifier que la signature commence par "sha256="
   if (!signature.startsWith('sha256=')) {
-    logger.error('❌ Format de signature invalide');
+    logger.error(`❌ Format de signature invalide. Reçu: "${signature.substring(0, 50)}..." (attendu: "sha256=...")`);
+    logger.debug(`Body length: ${body.length}, Secret length: ${config.calendly.webhookSecret.length}`);
     return false;
   }
 
-  return crypto.timingSafeEqual(
+  const isValid = crypto.timingSafeEqual(
     Buffer.from(signature),
     Buffer.from(expectedSignature)
   );
+
+  if (!isValid) {
+    logger.error('❌ Signature HMAC invalide (ne correspond pas au secret)');
+    logger.debug(`Expected starts with: ${expectedSignature.substring(0, 20)}...`);
+  }
+
+  return isValid;
 }
 
 /**

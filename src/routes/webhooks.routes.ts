@@ -17,9 +17,24 @@ interface CalendlyWebhookRequest extends Request {
 router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
   try {
     // 1. Valider la signature HMAC
-    const signature = req.headers['calendly-webhook-signature'] as string;
+    // Calendly peut envoyer la signature dans différents headers
+    const signature = 
+      (req.headers['calendly-webhook-signature'] as string) ||
+      (req.headers['x-calendly-webhook-signature'] as string) ||
+      (req.headers['calendly-signature'] as string);
+    
+    // Log pour debug
+    logger.debug('Headers reçus:', {
+      'calendly-webhook-signature': req.headers['calendly-webhook-signature'] ? 'présent' : 'absent',
+      'x-calendly-webhook-signature': req.headers['x-calendly-webhook-signature'] ? 'présent' : 'absent',
+      'calendly-signature': req.headers['calendly-signature'] ? 'présent' : 'absent',
+      'content-type': req.headers['content-type'],
+    });
+    
     // Utiliser le body brut si disponible, sinon stringify le body parsé
     const bodyString = req.rawBody || JSON.stringify(req.body);
+    
+    logger.debug(`Body length: ${bodyString.length}, Body preview: ${bodyString.substring(0, 100)}...`);
 
     if (!validateCalendlySignature(signature, bodyString)) {
       logger.error('❌ Signature Calendly invalide');
