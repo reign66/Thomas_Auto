@@ -18,6 +18,7 @@ app.use(helmet());
 app.use(cors());
 
 // Parser JSON pour toutes les routes sauf /webhooks/calendly
+// Pour /webhooks/calendly, on utilise rawBodyMiddleware qui gère le parsing
 app.use((req, res, next) => {
   if (req.originalUrl === '/webhooks/calendly' && req.method === 'POST') {
     // Pour cette route, on utilise rawBodyMiddleware qui gère le parsing
@@ -25,6 +26,18 @@ app.use((req, res, next) => {
   }
   // Pour les autres routes, utiliser le parser JSON standard
   express.json({ limit: '10mb' })(req, res, next);
+});
+
+// Middleware pour s'assurer que le body est bien un objet pour /webhooks/calendly
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhooks/calendly' && req.method === 'POST' && typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {
+      // Ignore si le parsing échoue, on laissera le handler gérer l'erreur
+    }
+  }
+  next();
 });
 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
