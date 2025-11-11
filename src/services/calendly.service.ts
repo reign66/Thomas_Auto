@@ -123,48 +123,67 @@ export function validateCalendlySignature(
  * Note: On extrait seulement le nom car le website vient de Notion
  */
 export function extractCalendlyData(
-  payload: CalendlyWebhookPayload
+  payload: CalendlyWebhookPayload | any
 ): ExtractedCalendlyData {
-  // Le payload Calendly peut avoir différentes structures selon l'événement
-  // Pour invitee.created, la structure est : payload.payload.invitee
-  let invitee = payload.invitee;
+  // Le payload Calendly a la structure : { created_at, created_by, event, payload: { ... } }
+  // Les données de l'invité sont dans payload.payload
   
-  // Si invitee n'est pas directement dans payload, chercher dans payload.payload
-  if (!invitee && (payload as any).payload) {
-    invitee = (payload as any).payload.invitee;
+  let invitee: any = null;
+  let questionsAndAnswers: any[] | undefined = undefined;
+  
+  // Structure principale : payload.payload contient les données de l'invité
+  if (payload.payload) {
+    invitee = payload.payload;
+    questionsAndAnswers = payload.payload.questions_and_answers;
   }
   
-  // Si toujours pas trouvé, chercher dans payload.event
-  if (!invitee && (payload as any).event) {
-    invitee = (payload as any).event.invitee;
+  // Fallback : chercher directement dans payload
+  if (!invitee) {
+    invitee = payload.invitee || payload;
   }
-
-  const name = invitee?.name || '';
-  const email = invitee?.email || '';
   
-  // Chercher questions_and_answers à différents niveaux
-  let questionsAndAnswers = payload.questions_and_answers;
-  if (!questionsAndAnswers && (payload as any).payload) {
-    questionsAndAnswers = (payload as any).payload.questions_and_answers;
+  // Extraire le nom - peut être dans name, first_name + last_name, ou payload.name
+  let name = '';
+  if (invitee?.name) {
+    name = invitee.name;
+  } else if (invitee?.first_name || invitee?.last_name) {
+    name = `${invitee.first_name || ''} ${invitee.last_name || ''}`.trim();
+  } else if (payload.payload?.name) {
+    name = payload.payload.name;
   }
-  if (!questionsAndAnswers && (payload as any).event) {
-    questionsAndAnswers = (payload as any).event.questions_and_answers;
+  
+  const email = invitee?.email || payload.payload?.email || '';
+  
+  // Chercher questions_and_answers si pas encore trouvé
+  if (!questionsAndAnswers) {
+    questionsAndAnswers = payload.questions_and_answers || payload.payload?.questions_and_answers;
   }
   
   // Chercher la réponse "Site Web" dans questions_and_answers (optionnel maintenant)
   const siteWebAnswer = questionsAndAnswers?.find(
-    (qa: any) => qa.question === 'Site Web' || qa.question?.toLowerCase().includes('site web')
+    (qa: any) => {
+      const question = qa.question || qa.Question || '';
+      return question === 'Site Web' || 
+             question === 'SIte Web' || 
+             question.toLowerCase().includes('site web');
+    }
   );
   
-  const siteWeb = siteWebAnswer?.answer || '';
+  const siteWeb = siteWebAnswer?.answer || siteWebAnswer?.Answer || '';
 
   // Seul le nom est obligatoire maintenant (le website vient de Notion)
   if (!name) {
-    logger.error('❌ Structure du payload Calendly:', JSON.stringify(payload, null, 2).substring(0, 500));
+    logger.error('❌ Structure du payload Calendly:', JSON.stringify(payload, null, 2).substring(0, 1000));
+    logger.error('❌ Clés disponibles:', Object.keys(payload));
+    if (payload.payload) {
+      logger.error('❌ Clés dans payload.payload:', Object.keys(payload.payload));
+    }
     throw new Error(
       `Données manquantes dans le webhook: name est requis. Structure reçue: ${JSON.stringify(Object.keys(payload))}`
     );
   }
+
+  logger.info(`✅ Nom extrait: "${name}", Email: "${email}"`);
 
   return { name, email, siteWeb };
 }

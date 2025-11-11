@@ -34,8 +34,16 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
     });
     logger.info('🔍 Headers pertinents reçus:', relevantHeaders);
     
-    // Utiliser le body brut si disponible, sinon stringify le body parsé
-    const bodyString = req.rawBody || JSON.stringify(req.body);
+    // Utiliser le body brut pour la validation de signature
+    const bodyString = req.rawBody || '';
+    
+    if (!bodyString) {
+      logger.error('❌ Body brut manquant pour validation de signature');
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Body manquant' },
+      });
+    }
     
     logger.debug(`Body length: ${bodyString.length}, Body preview: ${bodyString.substring(0, 200)}...`);
 
@@ -47,17 +55,31 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
       });
     }
 
+    // S'assurer que req.body est bien un objet (pas une chaîne)
+    let payload = req.body;
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch (e) {
+        logger.error('❌ Impossible de parser le body JSON');
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Body JSON invalide' },
+        });
+      }
+    }
+    
     // Log le body parsé pour debug
-    logger.info('📦 Body parsé reçu:', JSON.stringify(req.body, null, 2).substring(0, 500));
+    logger.info('📦 Body parsé reçu:', JSON.stringify(payload, null, 2).substring(0, 500));
 
     // 2. Extraire le nom du prospect depuis le webhook
     let name: string;
     try {
-      const extracted = extractCalendlyData(req.body);
+      const extracted = extractCalendlyData(payload);
       name = extracted.name;
     } catch (error: any) {
       logger.error(`❌ Erreur lors de l'extraction des données: ${error.message}`);
-      logger.error(`Body structure:`, JSON.stringify(req.body, null, 2).substring(0, 1000));
+      logger.error(`Body structure:`, JSON.stringify(payload, null, 2).substring(0, 1000));
       return res.status(400).json({
         success: false,
         error: { message: error.message },
