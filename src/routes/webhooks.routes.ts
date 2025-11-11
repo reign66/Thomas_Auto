@@ -37,7 +37,7 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
     // Utiliser le body brut si disponible, sinon stringify le body parsé
     const bodyString = req.rawBody || JSON.stringify(req.body);
     
-    logger.debug(`Body length: ${bodyString.length}, Body preview: ${bodyString.substring(0, 100)}...`);
+    logger.debug(`Body length: ${bodyString.length}, Body preview: ${bodyString.substring(0, 200)}...`);
 
     if (!validateCalendlySignature(signature, bodyString)) {
       logger.error('❌ Signature Calendly invalide');
@@ -47,8 +47,22 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
       });
     }
 
+    // Log le body parsé pour debug
+    logger.info('📦 Body parsé reçu:', JSON.stringify(req.body, null, 2).substring(0, 500));
+
     // 2. Extraire le nom du prospect depuis le webhook
-    const { name } = extractCalendlyData(req.body);
+    let name: string;
+    try {
+      const extracted = extractCalendlyData(req.body);
+      name = extracted.name;
+    } catch (error: any) {
+      logger.error(`❌ Erreur lors de l'extraction des données: ${error.message}`);
+      logger.error(`Body structure:`, JSON.stringify(req.body, null, 2).substring(0, 1000));
+      return res.status(400).json({
+        success: false,
+        error: { message: error.message },
+      });
+    }
 
     logger.info(`🔔 Webhook Calendly reçu pour : ${name}`);
 

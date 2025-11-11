@@ -125,20 +125,44 @@ export function validateCalendlySignature(
 export function extractCalendlyData(
   payload: CalendlyWebhookPayload
 ): ExtractedCalendlyData {
-  const name = payload.invitee?.name || '';
-  const email = payload.invitee?.email || '';
+  // Le payload Calendly peut avoir différentes structures selon l'événement
+  // Pour invitee.created, la structure est : payload.payload.invitee
+  let invitee = payload.invitee;
+  
+  // Si invitee n'est pas directement dans payload, chercher dans payload.payload
+  if (!invitee && (payload as any).payload) {
+    invitee = (payload as any).payload.invitee;
+  }
+  
+  // Si toujours pas trouvé, chercher dans payload.event
+  if (!invitee && (payload as any).event) {
+    invitee = (payload as any).event.invitee;
+  }
+
+  const name = invitee?.name || '';
+  const email = invitee?.email || '';
+  
+  // Chercher questions_and_answers à différents niveaux
+  let questionsAndAnswers = payload.questions_and_answers;
+  if (!questionsAndAnswers && (payload as any).payload) {
+    questionsAndAnswers = (payload as any).payload.questions_and_answers;
+  }
+  if (!questionsAndAnswers && (payload as any).event) {
+    questionsAndAnswers = (payload as any).event.questions_and_answers;
+  }
   
   // Chercher la réponse "Site Web" dans questions_and_answers (optionnel maintenant)
-  const siteWebAnswer = payload.questions_and_answers?.find(
-    (qa) => qa.question === 'Site Web' || qa.question.toLowerCase().includes('site web')
+  const siteWebAnswer = questionsAndAnswers?.find(
+    (qa: any) => qa.question === 'Site Web' || qa.question?.toLowerCase().includes('site web')
   );
   
   const siteWeb = siteWebAnswer?.answer || '';
 
   // Seul le nom est obligatoire maintenant (le website vient de Notion)
   if (!name) {
+    logger.error('❌ Structure du payload Calendly:', JSON.stringify(payload, null, 2).substring(0, 500));
     throw new Error(
-      `Données manquantes dans le webhook: name est requis`
+      `Données manquantes dans le webhook: name est requis. Structure reçue: ${JSON.stringify(Object.keys(payload))}`
     );
   }
 
