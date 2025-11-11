@@ -6,8 +6,13 @@ const anthropic = new Anthropic({
   apiKey: config.anthropic.apiKey,
 });
 
+// Très moderne (par défaut)
 const CLAUDE_PROMPT_TEMPLATE = `J'ai ce lien URL d'un site que je veux améliorer pour un client qui a un site bien mais que je veux moderniser pour y ajouter du SEO, modernité visuel et plus clair pour les clients qui se rendent sur le site. Je veux aussi arriver à récupérer les images/hyperliens et toutes les ressources sur site qui doivent être héberger quelque part pour les héberger dans mon serveur. Récupères moi tout ça et fais moi un prompt pour que je puisse télécharger tout ça et faire en sorte que mon prompt puisse générer l'entièreté des fonctionnalités du site tout en modernisant. Je donnerai ensuite ça à Lovable qui me finira le travail. Toi tu dois juste me donner les bonnes instructions pour que Lovable effectue cela. J'aimerais mettre en place un site très animé avec des animations modernes avec des fondues, contrastes je veux qu'il ressente du mouvement dans son site pour qu'il pense réellement que ça vaut le coup donc hésite pas à bien préciser ça. selon ce site web : {URL_DU_SITE}`;
 
+// Variante plus simple pour "Moderne"
+const CLAUDE_PROMPT_TEMPLATE_MODERN = `J'ai ce lien URL d'un site que je veux améliorer pour un client qui a un site bien mais que je veux moderniser pour y ajouter du SEO, modernité visuel et plus clair pour les clients qui se rendent sur le site. Je veux aussi arriver à récupérer les images/hyperliens et toutes les ressources sur site qui doivent être héberger qql part pour les herberger dans mon serveur. Récupères moi tout ça et fais moi un prompt pour que je puisses télécharger tout ça et faire en sorte que mon prompt puisse générer l'entièreté des fonctionnalités du site tout en modernisant. Je donnerai ensuite ça à Lovable qui me finira le travail. Toi tu dois juste me donner les bonnes instructions pour que Lovable effectue cela. Mets des animations simples pour faire en sorte que le site soit animé. L'URL du site web est le suivant : {URL_DU_SITE}`;
+
+// Très moderne: instructions riches en animations
 const ANIMATIONS_INSTRUCTIONS = `
 Instructions complémentaires obligatoires :
 a) N'inventes pas de données, utilise uniquement les informations du site source
@@ -43,18 +48,33 @@ Patterns : Fade-In-Up (sections), Blur-In (titres), Scale-In (cards), Slide-In-L
 
 Site TRÈS ANIMÉ, fluide et professionnel partout.`;
 
+// Moderne: instructions plus simples basées sur la liste fournie
+const SIMPLE_INSTRUCTIONS = `
+Instructions complémentaires obligatoires :
+a) N'inventes pas de données
+b) {URL_SITE_ORIGINAL} + récupère des valeurs Google Maps scrappées si besoin
+c) Inclus un pop-up cookies
+d) Crée une page CGV (Conditions Générales de Vente)
+e) Crée une page Politique de Confidentialité
+f) Crée une page Mentions Légales avec : {NOM_DIRIGEANT} – Hébergeur : Ionos
+g) Ajouter le logo du client (fourni), retouche si nécessaire
+`;
+
 /**
  * Analyse un site web avec Claude et génère un prompt pour Lovable
  */
 export async function analyzeWebsite(
   siteUrl: string,
   scrapedContent: string,
-  prospectName: string
+  prospectName: string,
+  options?: { siteType?: 'Moderne' | 'Très moderne'; directorName?: string }
 ): Promise<string> {
   try {
     logger.info(`🤖 Appel Claude API pour analyser : ${siteUrl}`);
 
-    const prompt = CLAUDE_PROMPT_TEMPLATE.replace('{URL_DU_SITE}', siteUrl);
+    const isModern = options?.siteType === 'Moderne';
+    const basePromptTemplate = isModern ? CLAUDE_PROMPT_TEMPLATE_MODERN : CLAUDE_PROMPT_TEMPLATE;
+    const prompt = basePromptTemplate.replace('{URL_DU_SITE}', siteUrl);
     
     const fullPrompt = `${prompt}\n\nContenu du site scrapé :\n${scrapedContent}`;
 
@@ -80,12 +100,19 @@ export async function analyzeWebsite(
 
     logger.info(`✅ Réponse Claude : ${claudeResponse.length} caractères`);
 
-    // Ajouter les instructions d'animations
-    const animations = ANIMATIONS_INSTRUCTIONS
-      .replace('{URL_SITE_ORIGINAL}', siteUrl)
-      .replace('{NOM_PROSPECT}', prospectName);
+    // Ajouter les instructions finales selon le type de site
+    let finalInstructions: string;
+    if (isModern) {
+      finalInstructions = SIMPLE_INSTRUCTIONS
+        .replace('{URL_SITE_ORIGINAL}', siteUrl)
+        .replace('{NOM_DIRIGEANT}', options?.directorName || prospectName);
+    } else {
+      finalInstructions = ANIMATIONS_INSTRUCTIONS
+        .replace('{URL_SITE_ORIGINAL}', siteUrl)
+        .replace('{NOM_PROSPECT}', prospectName);
+    }
 
-    const finalPrompt = `${claudeResponse}\n\n${animations}`;
+    const finalPrompt = `${claudeResponse}\n\n${finalInstructions}`;
 
     logger.info(`🔨 Construction prompt final : ${finalPrompt.length} caractères`);
     

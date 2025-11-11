@@ -48,7 +48,15 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
     // 3. Analyser avec Claude
     let claudePrompt: string;
     try {
-      claudePrompt = await analyzeWebsite(prospectData.website, scrapedContent, prospectName);
+      claudePrompt = await analyzeWebsite(
+        prospectData.website,
+        scrapedContent,
+        prospectName,
+        {
+          siteType: prospectData.siteType || 'Très moderne',
+          directorName: prospectData.name,
+        }
+      );
     } catch (error: any) {
       const errorMsg = `Erreur lors de l'analyse Claude pour ${prospectData.website}`;
       const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);

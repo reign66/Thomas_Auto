@@ -35,6 +35,7 @@ export interface ProspectData {
   email: string;
   phone: string;
   logoUrl: string | null;
+  siteType: 'Moderne' | 'Très moderne' | null;
 }
 
 /**
@@ -88,6 +89,16 @@ export async function getProspectByName(prospectName: string): Promise<ProspectD
       }
     }
 
+    // Extraire le type de site (select: "Moderne" | "Très moderne")
+    let siteType: 'Moderne' | 'Très moderne' | null = null;
+    const siteTypeProperty = properties?.['Type de site'];
+    if (siteTypeProperty && siteTypeProperty.type === 'select') {
+      const selected = siteTypeProperty.select?.name as string | undefined;
+      if (selected === 'Moderne' || selected === 'Très moderne') {
+        siteType = selected;
+      }
+    }
+
     logger.info(`✅ Prospect trouvé : ${prospectName}`);
     if (logoUrl) {
       logger.info(`🖼️ Logo trouvé : ${logoUrl}`);
@@ -101,6 +112,7 @@ export async function getProspectByName(prospectName: string): Promise<ProspectD
       email,
       phone,
       logoUrl,
+      siteType,
     };
   } catch (error: any) {
     const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
