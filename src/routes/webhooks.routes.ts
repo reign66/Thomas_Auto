@@ -55,13 +55,29 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
       });
     }
 
-    // S'assurer que req.body est bien un objet (pas une chaîne)
+    // S'assurer que req.body est bien un objet (pas une chaîne ou un objet indexé par caractères)
     let payload = req.body;
+    
+    // Si req.body est une chaîne, parser
     if (typeof payload === 'string') {
       try {
         payload = JSON.parse(payload);
       } catch (e) {
         logger.error('❌ Impossible de parser le body JSON');
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Body JSON invalide' },
+        });
+      }
+    }
+    
+    // Si req.body est un objet indexé par caractères (problème de parsing), utiliser rawBody
+    if (payload && typeof payload === 'object' && !Array.isArray(payload) && Object.keys(payload).every(key => /^\d+$/.test(key))) {
+      logger.warn('⚠️ Body parsé comme chaîne indexée, re-parsing depuis rawBody');
+      try {
+        payload = JSON.parse(req.rawBody || '{}');
+      } catch (e) {
+        logger.error('❌ Impossible de parser le rawBody JSON');
         return res.status(400).json({
           success: false,
           error: { message: 'Body JSON invalide' },
