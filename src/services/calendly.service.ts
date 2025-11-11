@@ -125,39 +125,24 @@ export function validateCalendlySignature(
 export function extractCalendlyData(
   payload: CalendlyWebhookPayload | any
 ): ExtractedCalendlyData {
-  // Le payload Calendly a la structure : { created_at, created_by, event, payload: { ... } }
-  // Les données de l'invité sont dans payload.payload
+  // Le payload Calendly a la structure : { created_at, created_by, event, payload: { name, email, questions_and_answers, ... } }
+  // Les données de l'invité sont directement dans payload.payload (pas payload.payload.invitee)
   
-  let invitee: any = null;
-  let questionsAndAnswers: any[] | undefined = undefined;
+  // Structure principale : payload.payload contient directement les données
+  const inviteeData = payload.payload || payload;
   
-  // Structure principale : payload.payload contient les données de l'invité
-  if (payload.payload) {
-    invitee = payload.payload;
-    questionsAndAnswers = payload.payload.questions_and_answers;
-  }
-  
-  // Fallback : chercher directement dans payload
-  if (!invitee) {
-    invitee = payload.invitee || payload;
-  }
-  
-  // Extraire le nom - peut être dans name, first_name + last_name, ou payload.name
+  // Extraire le nom - peut être dans name, first_name + last_name
   let name = '';
-  if (invitee?.name) {
-    name = invitee.name;
-  } else if (invitee?.first_name || invitee?.last_name) {
-    name = `${invitee.first_name || ''} ${invitee.last_name || ''}`.trim();
-  } else if (payload.payload?.name) {
-    name = payload.payload.name;
+  if (inviteeData?.name) {
+    name = inviteeData.name;
+  } else if (inviteeData?.first_name || inviteeData?.last_name) {
+    name = `${inviteeData.first_name || ''} ${inviteeData.last_name || ''}`.trim();
   }
   
-  const email = invitee?.email || payload.payload?.email || '';
+  const email = inviteeData?.email || '';
   
-  // Chercher questions_and_answers si pas encore trouvé
-  if (!questionsAndAnswers) {
-    questionsAndAnswers = payload.questions_and_answers || payload.payload?.questions_and_answers;
-  }
+  // Chercher questions_and_answers
+  const questionsAndAnswers = inviteeData?.questions_and_answers || inviteeData?.questions_and_answers;
   
   // Chercher la réponse "Site Web" dans questions_and_answers (optionnel maintenant)
   const siteWebAnswer = questionsAndAnswers?.find(
@@ -177,6 +162,7 @@ export function extractCalendlyData(
     logger.error('❌ Clés disponibles:', Object.keys(payload));
     if (payload.payload) {
       logger.error('❌ Clés dans payload.payload:', Object.keys(payload.payload));
+      logger.error('❌ Valeur de payload.payload.name:', payload.payload.name);
     }
     throw new Error(
       `Données manquantes dans le webhook: name est requis. Structure reçue: ${JSON.stringify(Object.keys(payload))}`
