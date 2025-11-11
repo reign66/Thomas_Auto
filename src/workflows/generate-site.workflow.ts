@@ -19,8 +19,9 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       prospectData = await getProspectByName(prospectName);
     } catch (error: any) {
       const errorMsg = `Le prospect "${prospectName}" n'a pas été trouvé dans Notion`;
-      logger.error(`❌ ${errorMsg}`);
-      await sendErrorEmail(prospectName, errorMsg, error.message);
+      const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+      logger.error(`❌ ${errorMsg}: ${errorDetails}`);
+      await sendErrorEmail(prospectName, errorMsg, errorDetails);
       throw error;
     }
 
@@ -38,8 +39,9 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       scrapedContent = await scrapeWebsite(prospectData.website);
     } catch (error: any) {
       const errorMsg = `Erreur lors du scraping du site : ${prospectData.website}`;
-      logger.error(`❌ ${errorMsg}`);
-      await sendErrorEmail(prospectName, errorMsg, error.message);
+      const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+      logger.error(`❌ ${errorMsg}: ${errorDetails}`);
+      await sendErrorEmail(prospectName, errorMsg, errorDetails);
       throw error;
     }
 
@@ -49,8 +51,9 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       claudePrompt = await analyzeWebsite(prospectData.website, scrapedContent, prospectName);
     } catch (error: any) {
       const errorMsg = `Erreur lors de l'analyse Claude pour ${prospectData.website}`;
-      logger.error(`❌ ${errorMsg}`);
-      await sendErrorEmail(prospectName, errorMsg, error.message);
+      const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+      logger.error(`❌ ${errorMsg}: ${errorDetails}`);
+      await sendErrorEmail(prospectName, errorMsg, errorDetails);
       throw error;
     }
 
@@ -86,7 +89,8 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
   } catch (error: any) {
     // Les erreurs sont déjà gérées dans chaque étape avec des emails d'erreur
     // On log juste l'erreur finale
-    logger.error(`❌ Workflow échoué pour ${prospectName}:`, error.message);
+    const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+    logger.error(`❌ Workflow échoué pour ${prospectName}: ${errorMsg}`);
     throw error;
   }
 }

@@ -103,7 +103,14 @@ export async function getProspectByName(prospectName: string): Promise<ProspectD
       logoUrl,
     };
   } catch (error: any) {
-    logger.error(`❌ Erreur lors de la récupération du prospect "${prospectName}":`, error.message);
+    const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+    logger.error(`❌ Erreur lors de la récupération du prospect "${prospectName}": ${errorMsg}`);
+    
+    // Si c'est une erreur de database ID (page au lieu de database), donner un message plus clair
+    if (errorMsg.includes('is a page, not a database')) {
+      throw new Error('NOTION_DATABASE_ID pointe vers une page au lieu d\'une base de données. Vérifiez votre configuration dans Railway.');
+    }
+    
     throw error;
   }
 }

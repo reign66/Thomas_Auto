@@ -98,7 +98,8 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
     // On ne fait pas await pour retourner la réponse immédiatement à Calendly
     generateSiteWorkflow(name).catch((error: any) => {
       // Les erreurs sont déjà gérées dans le workflow avec des emails
-      logger.error(`❌ Erreur dans le workflow pour ${name}:`, error.message);
+      const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+      logger.error(`❌ Erreur dans le workflow pour ${name}: ${errorMsg}`);
     });
 
     return;
