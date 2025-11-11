@@ -10,6 +10,9 @@ import webhooksRoutes from './routes/webhooks.routes';
 
 const app = express();
 
+// Trust proxy pour Railway (nécessaire pour rate limiting et IP correcte)
+app.set('trust proxy', 1);
+
 // Middleware de sécurité
 app.use(helmet());
 app.use(cors());
