@@ -73,6 +73,7 @@ app.listen(PORT, () => {
   logger.info(`📡 Environnement : ${config.nodeEnv}`);
   logger.info(`🔗 Health check : ${config.app.url}/health`);
   logger.info(`📥 Webhook Calendly : ${config.app.url}/webhooks/calendly`);
+  logger.info(`📥 Webhook Notion : ${config.app.url}/webhooks/notion`);
 });
 
 // Gestion gracieuse de l'arrêt
