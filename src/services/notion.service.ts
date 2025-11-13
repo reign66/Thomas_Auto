@@ -239,6 +239,37 @@ export async function getProspectLogo(prospectName: string): Promise<string | nu
 }
 
 /**
+ * Met à jour un prospect dans Notion directement par pageId
+ * @param pageId ID de la page Notion
+ * @param lovableUrl URL Lovable à mettre à jour
+ */
+export async function updateProspectByPageId(
+  pageId: string,
+  lovableUrl: string
+): Promise<void> {
+  try {
+    logger.info(`📊 Mise à jour Notion pour la page : ${pageId}`);
+
+    // Mettre à jour les propriétés directement par pageId
+    await retryWithDelay(async () => {
+      return await notion.pages.update({
+        page_id: pageId,
+        properties: {
+          'Website Lovable': {
+            url: lovableUrl,
+          },
+        },
+      });
+    });
+
+    logger.info(`✅ Notion mis à jour avec l'URL Lovable pour la page ${pageId}`);
+  } catch (error: any) {
+    logger.error(`❌ Erreur lors de la mise à jour Notion pour la page ${pageId}:`, error.message);
+    // On ne fait pas échouer le processus si Notion échoue
+  }
+}
+
+/**
  * Met à jour un prospect dans Notion
  */
 export async function updateProspect(

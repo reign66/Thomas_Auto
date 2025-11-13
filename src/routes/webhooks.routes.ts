@@ -198,8 +198,8 @@ router.post('/notion', async (req: NotionWebhookRequest, res: Response) => {
       // Récupérer les données du prospect depuis Notion
       const prospectData = await getProspectByPageId(pageId);
       
-      // Lancer le workflow avec les données directement
-      generateSiteWorkflow(prospectData).catch((error: any) => {
+      // Lancer le workflow avec les données directement et le pageId pour mettre à jour Notion
+      generateSiteWorkflow(prospectData, pageId).catch((error: any) => {
         const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
         logger.error(`❌ Erreur dans le workflow pour ${prospectData.name}: ${errorMsg}`);
       });
