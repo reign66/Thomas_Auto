@@ -1,4 +1,4 @@
-import { getProspectByName, ProspectData } from '../services/notion.service';
+import { getProspectByName, ProspectData, updateProspectByPageId } from '../services/notion.service';
 import { scrapeWebsite } from '../services/scraper.service';
 import { analyzeWebsite } from '../services/claude.service';
 import { generateLovableUrl } from '../services/lovable.service';
@@ -8,8 +8,12 @@ import { logger } from '../utils/logger';
 /**
  * Workflow centralisé de génération de site
  * @param prospectNameOrData Nom du prospect (depuis le webhook Calendly) ou données du prospect (depuis le webhook Notion)
+ * @param pageId ID de la page Notion (optionnel, pour mettre à jour Notion avec l'URL Lovable)
  */
-export async function generateSiteWorkflow(prospectNameOrData: string | ProspectData): Promise<void> {
+export async function generateSiteWorkflow(
+  prospectNameOrData: string | ProspectData,
+  pageId?: string
+): Promise<void> {
   try {
     // 1. Récupérer les données du prospect
     let prospectData: ProspectData;
@@ -83,7 +87,18 @@ export async function generateSiteWorkflow(prospectNameOrData: string | Prospect
     logger.info(lovableUrl);
     logger.info('========================================');
 
-    // 5. Envoyer l'email avec l'URL
+    // 5. Mettre à jour Notion avec l'URL Lovable si pageId est fourni
+    if (pageId) {
+      try {
+        await updateProspectByPageId(pageId, lovableUrl);
+        logger.info(`✅ Notion mis à jour avec l'URL Lovable pour la page ${pageId}`);
+      } catch (error: any) {
+        // On log l'erreur mais on continue le workflow
+        logger.error(`❌ Erreur lors de la mise à jour Notion, mais le workflow continue: ${error.message}`);
+      }
+    }
+
+    // 6. Envoyer l'email avec l'URL
     try {
       await sendLovableUrlEmail({
         prospectName: prospectData.name,
