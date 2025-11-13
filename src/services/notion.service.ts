@@ -39,6 +39,63 @@ export interface ProspectData {
 }
 
 /**
+ * Extrait les données d'un prospect depuis les propriétés d'une page Notion
+ */
+function extractProspectDataFromProperties(properties: any, prospectName?: string): ProspectData {
+  // Extraire le nom (depuis le titre ou le paramètre)
+  let name = prospectName || '';
+  const nameProperty = properties?.['Nom Du Prospect'];
+  if (nameProperty && nameProperty.type === 'title') {
+    const titleArray = nameProperty.title || [];
+    if (titleArray.length > 0) {
+      name = titleArray.map((t: any) => t.plain_text || '').join('').trim();
+    }
+  }
+
+  // Extraire le website
+  const websiteProperty = properties?.Website;
+  const website = websiteProperty?.url || '';
+
+  // Extraire l'email
+  const emailProperty = properties?.Email;
+  const email = emailProperty?.email || '';
+
+  // Extraire le téléphone
+  const phoneProperty = properties?.Téléphone;
+  const phone = phoneProperty?.phone_number || '';
+
+  // Extraire le logo
+  const logoProperty = properties?.Logo;
+  let logoUrl: string | null = null;
+  
+  if (logoProperty && logoProperty.type === 'files') {
+    const files = logoProperty.files;
+    if (files && files.length > 0) {
+      logoUrl = files[0]?.file?.url || null;
+    }
+  }
+
+  // Extraire le type de site (select: "Moderne" | "Très moderne")
+  let siteType: 'Moderne' | 'Très moderne' | null = null;
+  const siteTypeProperty = properties?.['Type de site'];
+  if (siteTypeProperty && siteTypeProperty.type === 'select') {
+    const selected = siteTypeProperty.select?.name as string | undefined;
+    if (selected === 'Moderne' || selected === 'Très moderne') {
+      siteType = selected;
+    }
+  }
+
+  return {
+    name,
+    website,
+    email,
+    phone,
+    logoUrl,
+    siteType,
+  };
+}
+
+/**
  * Récupère toutes les données d'un prospect depuis Notion (Website + Logo)
  * @param prospectName Nom exact du prospect dans Notion
  * @returns Données du prospect ou null si non trouvé
@@ -66,54 +123,16 @@ export async function getProspectByName(prospectName: string): Promise<ProspectD
     const page = response.results[0] as any;
     const properties = page.properties;
 
-    // Extraire le website
-    const websiteProperty = properties?.Website;
-    const website = websiteProperty?.url || '';
+    const prospectData = extractProspectDataFromProperties(properties, prospectName);
 
-    // Extraire l'email
-    const emailProperty = properties?.Email;
-    const email = emailProperty?.email || '';
-
-    // Extraire le téléphone
-    const phoneProperty = properties?.Téléphone;
-    const phone = phoneProperty?.phone_number || '';
-
-    // Extraire le logo
-    const logoProperty = properties?.Logo;
-    let logoUrl: string | null = null;
-    
-    if (logoProperty && logoProperty.type === 'files') {
-      const files = logoProperty.files;
-      if (files && files.length > 0) {
-        logoUrl = files[0]?.file?.url || null;
-      }
-    }
-
-    // Extraire le type de site (select: "Moderne" | "Très moderne")
-    let siteType: 'Moderne' | 'Très moderne' | null = null;
-    const siteTypeProperty = properties?.['Type de site'];
-    if (siteTypeProperty && siteTypeProperty.type === 'select') {
-      const selected = siteTypeProperty.select?.name as string | undefined;
-      if (selected === 'Moderne' || selected === 'Très moderne') {
-        siteType = selected;
-      }
-    }
-
-    logger.info(`✅ Prospect trouvé : ${prospectName}`);
-    if (logoUrl) {
-      logger.info(`🖼️ Logo trouvé : ${logoUrl}`);
+    logger.info(`✅ Prospect trouvé : ${prospectData.name}`);
+    if (prospectData.logoUrl) {
+      logger.info(`🖼️ Logo trouvé : ${prospectData.logoUrl}`);
     } else {
-      logger.info(`ℹ️ Pas de logo pour "${prospectName}"`);
+      logger.info(`ℹ️ Pas de logo pour "${prospectData.name}"`);
     }
 
-    return {
-      name: prospectName,
-      website,
-      email,
-      phone,
-      logoUrl,
-      siteType,
-    };
+    return prospectData;
   } catch (error: any) {
     const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
     logger.error(`❌ Erreur lors de la récupération du prospect "${prospectName}": ${errorMsg}`);
@@ -123,6 +142,43 @@ export async function getProspectByName(prospectName: string): Promise<ProspectD
       throw new Error('NOTION_DATABASE_ID pointe vers une page au lieu d\'une base de données. Vérifiez votre configuration dans Railway.');
     }
     
+    throw error;
+  }
+}
+
+/**
+ * Récupère toutes les données d'un prospect depuis Notion par son page ID
+ * @param pageId ID de la page Notion
+ * @returns Données du prospect
+ */
+export async function getProspectByPageId(pageId: string): Promise<ProspectData> {
+  try {
+    logger.info(`🔍 Récupération des données Notion pour la page : ${pageId}`);
+
+    const page = await retryWithDelay(async () => {
+      return await notion.pages.retrieve({
+        page_id: pageId,
+      });
+    }) as any;
+
+    const properties = page.properties;
+    const prospectData = extractProspectDataFromProperties(properties);
+
+    if (!prospectData.name) {
+      throw new Error(`Impossible d'extraire le nom du prospect depuis la page ${pageId}`);
+    }
+
+    logger.info(`✅ Données récupérées pour : ${prospectData.name}`);
+    if (prospectData.logoUrl) {
+      logger.info(`🖼️ Logo trouvé : ${prospectData.logoUrl}`);
+    } else {
+      logger.info(`ℹ️ Pas de logo pour "${prospectData.name}"`);
+    }
+
+    return prospectData;
+  } catch (error: any) {
+    const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+    logger.error(`❌ Erreur lors de la récupération du prospect depuis la page ${pageId}: ${errorMsg}`);
     throw error;
   }
 }

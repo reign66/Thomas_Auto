@@ -1,4 +1,4 @@
-import { getProspectByName } from '../services/notion.service';
+import { getProspectByName, ProspectData } from '../services/notion.service';
 import { scrapeWebsite } from '../services/scraper.service';
 import { analyzeWebsite } from '../services/claude.service';
 import { generateLovableUrl } from '../services/lovable.service';
@@ -7,29 +7,38 @@ import { logger } from '../utils/logger';
 
 /**
  * Workflow centralisé de génération de site
- * @param prospectName Nom du prospect (depuis le webhook Calendly)
+ * @param prospectNameOrData Nom du prospect (depuis le webhook Calendly) ou données du prospect (depuis le webhook Notion)
  */
-export async function generateSiteWorkflow(prospectName: string): Promise<void> {
+export async function generateSiteWorkflow(prospectNameOrData: string | ProspectData): Promise<void> {
   try {
-    logger.info(`🚀 Démarrage du workflow pour : ${prospectName}`);
-
-    // 1. Récupérer les données du prospect depuis Notion
-    let prospectData;
-    try {
-      prospectData = await getProspectByName(prospectName);
-    } catch (error: any) {
-      const errorMsg = `Le prospect "${prospectName}" n'a pas été trouvé dans Notion`;
-      const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
-      logger.error(`❌ ${errorMsg}: ${errorDetails}`);
-      await sendErrorEmail(prospectName, errorMsg, errorDetails);
-      throw error;
+    // 1. Récupérer les données du prospect
+    let prospectData: ProspectData;
+    
+    if (typeof prospectNameOrData === 'string') {
+      // Mode Calendly : on cherche par nom
+      const prospectName = prospectNameOrData;
+      logger.info(`🚀 Démarrage du workflow pour : ${prospectName}`);
+      
+      try {
+        prospectData = await getProspectByName(prospectName);
+      } catch (error: any) {
+        const errorMsg = `Le prospect "${prospectName}" n'a pas été trouvé dans Notion`;
+        const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+        logger.error(`❌ ${errorMsg}: ${errorDetails}`);
+        await sendErrorEmail(prospectName, errorMsg, errorDetails);
+        throw error;
+      }
+    } else {
+      // Mode Notion : on utilise directement les données
+      prospectData = prospectNameOrData;
+      logger.info(`🚀 Démarrage du workflow pour : ${prospectData.name} (depuis Notion)`);
     }
 
     // Vérifier que le website est présent
     if (!prospectData.website) {
-      const errorMsg = `Le prospect "${prospectName}" n'a pas de site web dans Notion`;
+      const errorMsg = `Le prospect "${prospectData.name}" n'a pas de site web dans Notion`;
       logger.error(`❌ ${errorMsg}`);
-      await sendErrorEmail(prospectName, errorMsg);
+      await sendErrorEmail(prospectData.name, errorMsg);
       throw new Error(errorMsg);
     }
 
@@ -41,7 +50,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       const errorMsg = `Erreur lors du scraping du site : ${prospectData.website}`;
       const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
       logger.error(`❌ ${errorMsg}: ${errorDetails}`);
-      await sendErrorEmail(prospectName, errorMsg, errorDetails);
+      await sendErrorEmail(prospectData.name, errorMsg, errorDetails);
       throw error;
     }
 
@@ -51,7 +60,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       claudePrompt = await analyzeWebsite(
         prospectData.website,
         scrapedContent,
-        prospectName,
+        prospectData.name,
         {
           siteType: prospectData.siteType || 'Très moderne',
           directorName: prospectData.name,
@@ -61,7 +70,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       const errorMsg = `Erreur lors de l'analyse Claude pour ${prospectData.website}`;
       const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
       logger.error(`❌ ${errorMsg}: ${errorDetails}`);
-      await sendErrorEmail(prospectName, errorMsg, errorDetails);
+      await sendErrorEmail(prospectData.name, errorMsg, errorDetails);
       throw error;
     }
 
@@ -70,7 +79,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
 
     logger.info(`🔗 URL Lovable générée`);
     logger.info('========================================');
-    logger.info(`🎯 URL LOVABLE POUR ${prospectName} :`);
+    logger.info(`🎯 URL LOVABLE POUR ${prospectData.name} :`);
     logger.info(lovableUrl);
     logger.info('========================================');
 
@@ -81,7 +90,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
         lovableUrl,
         originalWebsite: prospectData.website,
       });
-      logger.info(`✅ Workflow terminé avec succès pour : ${prospectName}`);
+      logger.info(`✅ Workflow terminé avec succès pour : ${prospectData.name}`);
     } catch (error: any) {
       // Si l'envoi d'email échoue, on log l'erreur mais on ne throw pas
       // L'URL est déjà dans les logs Railway, on peut la récupérer manuellement
@@ -89,7 +98,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
       logger.error(`URL Lovable : ${lovableUrl}`);
       // On envoie quand même un email d'erreur pour informer
       await sendErrorEmail(
-        prospectName,
+        prospectData.name,
         'Erreur lors de l\'envoi de l\'email avec l\'URL Lovable',
         `L'URL a été générée avec succès mais l'envoi d'email a échoué. URL : ${lovableUrl}`
       );
@@ -98,6 +107,7 @@ export async function generateSiteWorkflow(prospectName: string): Promise<void> 
     // Les erreurs sont déjà gérées dans chaque étape avec des emails d'erreur
     // On log juste l'erreur finale
     const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+    const prospectName = typeof prospectNameOrData === 'string' ? prospectNameOrData : prospectNameOrData.name;
     logger.error(`❌ Workflow échoué pour ${prospectName}: ${errorMsg}`);
     throw error;
   }

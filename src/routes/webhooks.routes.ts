@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { validateCalendlySignature, extractCalendlyData } from '../services/calendly.service';
+import { getProspectByPageId } from '../services/notion.service';
 import { generateSiteWorkflow } from '../workflows/generate-site.workflow';
 import { logger } from '../utils/logger';
 
@@ -121,6 +122,95 @@ router.post('/calendly', async (req: CalendlyWebhookRequest, res: Response) => {
     return;
   } catch (error: any) {
     logger.error(`❌ Erreur dans le webhook Calendly :`, error.message);
+    
+    // Si c'est une erreur de validation, retourner 400
+    if (error.message.includes('manquantes') || error.message.includes('invalide')) {
+      return res.status(400).json({
+        success: false,
+        error: { message: error.message },
+      });
+    }
+
+    // Sinon, erreur serveur
+    return res.status(500).json({
+      success: false,
+      error: {
+        message: 'Erreur lors du traitement du webhook',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message }),
+      },
+    });
+  }
+});
+
+interface NotionWebhookRequest extends Request {
+  body: any;
+}
+
+/**
+ * POST /webhooks/notion
+ * Reçoit le webhook Notion (déclenché par le bouton "Go site") et déclenche le workflow complet
+ */
+router.post('/notion', async (req: NotionWebhookRequest, res: Response) => {
+  try {
+    logger.info('🔔 Webhook Notion reçu');
+    logger.debug('Body reçu:', JSON.stringify(req.body, null, 2).substring(0, 500));
+
+    // Notion peut envoyer différents formats de webhook selon le type d'automatisation
+    // Format 1 : { page_id: "..." } (automatisation simple)
+    // Format 2 : { payload: { page_id: "..." } } (automatisation avec payload)
+    // Format 3 : { data: { page_id: "..." } } (autre format possible)
+    
+    let pageId: string | undefined;
+    
+    // Essayer différents formats
+    if (req.body?.page_id) {
+      pageId = req.body.page_id;
+    } else if (req.body?.payload?.page_id) {
+      pageId = req.body.payload.page_id;
+    } else if (req.body?.data?.page_id) {
+      pageId = req.body.data.page_id;
+    } else if (req.body?.page?.id) {
+      pageId = req.body.page.id;
+    } else if (req.body?.id) {
+      // Si c'est directement l'ID de la page
+      pageId = req.body.id;
+    }
+
+    if (!pageId) {
+      logger.error('❌ Page ID manquant dans le webhook Notion');
+      logger.error('Structure du body:', JSON.stringify(req.body, null, 2));
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Page ID manquant dans le webhook' },
+      });
+    }
+
+    logger.info(`📄 Page ID reçu : ${pageId}`);
+
+    // Retourner 200 OK immédiatement (pour que Notion ne réessaie pas)
+    res.status(200).json({
+      success: true,
+      message: 'Webhook reçu, traitement en cours',
+    });
+
+    // Lancer le workflow de génération en arrière-plan (asynchrone)
+    try {
+      // Récupérer les données du prospect depuis Notion
+      const prospectData = await getProspectByPageId(pageId);
+      
+      // Lancer le workflow avec les données directement
+      generateSiteWorkflow(prospectData).catch((error: any) => {
+        const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+        logger.error(`❌ Erreur dans le workflow pour ${prospectData.name}: ${errorMsg}`);
+      });
+    } catch (error: any) {
+      const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+      logger.error(`❌ Erreur lors de la récupération des données Notion pour la page ${pageId}: ${errorMsg}`);
+    }
+
+    return;
+  } catch (error: any) {
+    logger.error(`❌ Erreur dans le webhook Notion :`, error.message);
     
     // Si c'est une erreur de validation, retourner 400
     if (error.message.includes('manquantes') || error.message.includes('invalide')) {
