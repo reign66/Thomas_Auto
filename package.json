@@ -1,0 +1,26 @@
+{
+  "name": "seo-prompts-system",
+  "version": "1.0.0",
+  "description": "Système de prompts SEO optimisés pour Lovable",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "marked": "^11.0.0",
+    "serve-static": "^1.15.0"
+  },
+  "keywords": [
+    "seo",
+    "prompts",
+    "lovable",
+    "web-optimization"
+  ],
+  "author": "",
+  "license": "MIT"
+}
