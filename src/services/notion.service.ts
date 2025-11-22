@@ -36,6 +36,8 @@ export interface ProspectData {
   phone: string;
   logoUrl: string | null;
   siteType: 'Moderne' | 'Très moderne' | null;
+  sectorActivity?: string;
+  geoZone?: string;
 }
 
 /**
@@ -85,6 +87,28 @@ function extractProspectDataFromProperties(properties: any, prospectName?: strin
     }
   }
 
+  // Extraire le secteur d'activité
+  let sectorActivity: string | undefined;
+  const sectorProperty = properties?.['Secteur activité'] || properties?.['Secteur d\'activité'];
+  if (sectorProperty) {
+    if (sectorProperty.type === 'rich_text' && sectorProperty.rich_text?.length > 0) {
+      sectorActivity = sectorProperty.rich_text.map((t: any) => t.plain_text || '').join('').trim();
+    } else if (sectorProperty.type === 'select') {
+      sectorActivity = sectorProperty.select?.name;
+    }
+  }
+
+  // Extraire la zone géographique
+  let geoZone: string | undefined;
+  const geoProperty = properties?.['Zone géographique'] || properties?.['Ville'] || properties?.['Localisation'];
+  if (geoProperty) {
+    if (geoProperty.type === 'rich_text' && geoProperty.rich_text?.length > 0) {
+      geoZone = geoProperty.rich_text.map((t: any) => t.plain_text || '').join('').trim();
+    } else if (geoProperty.type === 'select') {
+      geoZone = geoProperty.select?.name;
+    }
+  }
+
   return {
     name,
     website,
@@ -92,6 +116,8 @@ function extractProspectDataFromProperties(properties: any, prospectName?: strin
     phone,
     logoUrl,
     siteType,
+    sectorActivity,
+    geoZone,
   };
 }
 

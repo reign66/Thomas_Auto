@@ -1,64 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config';
 import { logger } from '../utils/logger';
+import { generateEnhancedSEOPrompt } from '../prompts/seo-prompt';
 
 const anthropic = new Anthropic({
   apiKey: config.anthropic.apiKey,
 });
-
-// Très moderne (par défaut)
-const CLAUDE_PROMPT_TEMPLATE = `J'ai ce lien URL d'un site que je veux améliorer pour un client qui a un site bien mais que je veux moderniser pour y ajouter du SEO, modernité visuel et plus clair pour les clients qui se rendent sur le site. Je veux aussi arriver à récupérer les images/hyperliens et toutes les ressources sur site qui doivent être héberger quelque part pour les héberger dans mon serveur. Récupères moi tout ça et fais moi un prompt pour que je puisse télécharger tout ça et faire en sorte que mon prompt puisse générer l'entièreté des fonctionnalités du site tout en modernisant. Je donnerai ensuite ça à Lovable qui me finira le travail. Toi tu dois juste me donner les bonnes instructions pour que Lovable effectue cela. J'aimerais mettre en place un site très animé avec des animations modernes avec des fondues, contrastes je veux qu'il ressente du mouvement dans son site pour qu'il pense réellement que ça vaut le coup donc hésite pas à bien préciser ça. selon ce site web : {URL_DU_SITE}`;
-
-// Variante plus simple pour "Moderne"
-const CLAUDE_PROMPT_TEMPLATE_MODERN = `J'ai ce lien URL d'un site que je veux améliorer pour un client qui a un site bien mais que je veux moderniser pour y ajouter du SEO, modernité visuel et plus clair pour les clients qui se rendent sur le site. Je veux aussi arriver à récupérer les images/hyperliens et toutes les ressources sur site qui doivent être héberger qql part pour les herberger dans mon serveur. Récupères moi tout ça et fais moi un prompt pour que je puisses télécharger tout ça et faire en sorte que mon prompt puisse générer l'entièreté des fonctionnalités du site tout en modernisant. Je donnerai ensuite ça à Lovable qui me finira le travail. Toi tu dois juste me donner les bonnes instructions pour que Lovable effectue cela. Mets des animations simples pour faire en sorte que le site soit animé. L'URL du site web est le suivant : {URL_DU_SITE}`;
-
-// Très moderne: instructions riches en animations
-const ANIMATIONS_INSTRUCTIONS = `
-Instructions complémentaires obligatoires :
-a) N'inventes pas de données, utilise uniquement les informations du site source
-b) Site source de référence : {URL_SITE_ORIGINAL}
-c) Inclus un pop-up cookies conforme RGPD
-d) Crée une page CGV (Conditions Générales de Vente) professionnelle
-e) Crée une page Politique de Confidentialité conforme RGPD
-f) Crée une page Mentions Légales avec : {NOM_PROSPECT} - Hébergeur : Ionos
-g) Utilise le logo fourni en référence pour l'identité visuelle du site
-
-ANIMATIONS OBLIGATOIRES :
-
-Librairie : Framer Motion + react-intersection-observer
-
-Composants UX :
-- CustomCursor : Halo qui suit la souris
-- AnimatedButton : Effet rebond sur hover/clic (stiffness: 400, damping: 17)
-- MagneticCard : Rotation 3D magnétique (stiffness: 300, damping: 30)
-- ParallaxContainer : Mouvement 3D selon souris (stiffness: 300, damping: 50)
-- useInView : Animations au scroll
-
-Fond : Couleurs contrastées (2-3 tons), dégradés progressifs, parallax 3D OU gradient fluide réactif
-
-Animations par section :
-- Hero : Cascade (badges→titre→CTA), blur-in + fade + slide-up, parallax fond
-- Stats : Stagger, CountUp, hover avec lift
-- Services : Cascade cards, magnétique 3D, icônes animées
-- Process : Slide-in left, lignes connectées
-- Témoignages : Scale-in + fade, hover élévation
-- CTA : Gradient dynamique, parallax 3D
-
-Patterns : Fade-In-Up (sections), Blur-In (titres), Scale-In (cards), Slide-In-Left (listes), Stagger (grilles)
-
-Site TRÈS ANIMÉ, fluide et professionnel partout.`;
-
-// Moderne: instructions plus simples basées sur la liste fournie
-const SIMPLE_INSTRUCTIONS = `
-Instructions complémentaires obligatoires :
-a) N'inventes pas de données
-b) {URL_SITE_ORIGINAL} + récupère des valeurs Google Maps scrappées si besoin
-c) Inclus un pop-up cookies
-d) Crée une page CGV (Conditions Générales de Vente)
-e) Crée une page Politique de Confidentialité
-f) Crée une page Mentions Légales avec : {NOM_DIRIGEANT} – Hébergeur : Ionos
-g) Ajouter le logo du client (fourni), retouche si nécessaire
-`;
 
 /**
  * Analyse un site web avec Claude et génère un prompt pour Lovable
@@ -67,24 +14,48 @@ export async function analyzeWebsite(
   siteUrl: string,
   scrapedContent: string,
   prospectName: string,
-  options?: { siteType?: 'Moderne' | 'Très moderne'; directorName?: string }
+  options?: { 
+    siteType?: 'Moderne' | 'Très moderne'; 
+    directorName?: string;
+    sectorActivity?: string;
+    geoZone?: string;
+    logoUrl?: string;
+  }
 ): Promise<string> {
   try {
     logger.info(`🤖 Appel Claude API pour analyser : ${siteUrl}`);
+    logger.info(`📊 Secteur d'activité : ${options?.sectorActivity || 'À déterminer'}`);
+    logger.info(`📍 Zone géographique : ${options?.geoZone || 'À déterminer'}`);
+    logger.info(`🎨 Type de site : ${options?.siteType || 'Très moderne'}`);
 
-    const isModern = options?.siteType === 'Moderne';
-    const basePromptTemplate = isModern ? CLAUDE_PROMPT_TEMPLATE_MODERN : CLAUDE_PROMPT_TEMPLATE;
-    const prompt = basePromptTemplate.replace('{URL_DU_SITE}', siteUrl);
-    
-    const fullPrompt = `${prompt}\n\nContenu du site scrapé :\n${scrapedContent}`;
+    // Générer le prompt SEO optimisé
+    const seoPrompt = generateEnhancedSEOPrompt(
+      siteUrl,
+      scrapedContent,
+      prospectName,
+      options?.sectorActivity,
+      options?.geoZone,
+      options?.siteType || 'Très moderne'
+    );
 
+    // Ajouter les informations du logo si disponible
+    let enhancedPrompt = seoPrompt;
+    if (options?.logoUrl) {
+      enhancedPrompt = enhancedPrompt.replace(
+        '[Logo fourni par le client]',
+        `Logo URL : ${options.logoUrl}`
+      );
+    }
+
+    // Appeler Claude avec le prompt SEO optimisé
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 8192, // Augmenté pour permettre des réponses plus détaillées
+      temperature: 0.7, // Pour plus de créativité dans les suggestions SEO
       messages: [
         {
           role: 'user',
-          content: fullPrompt,
+          content: enhancedPrompt,
         },
       ],
     });
@@ -100,21 +71,69 @@ export async function analyzeWebsite(
 
     logger.info(`✅ Réponse Claude : ${claudeResponse.length} caractères`);
 
-    // Ajouter les instructions finales selon le type de site
-    let finalInstructions: string;
-    if (isModern) {
-      finalInstructions = SIMPLE_INSTRUCTIONS
-        .replace('{URL_SITE_ORIGINAL}', siteUrl)
-        .replace('{NOM_DIRIGEANT}', options?.directorName || prospectName);
-    } else {
-      finalInstructions = ANIMATIONS_INSTRUCTIONS
-        .replace('{URL_SITE_ORIGINAL}', siteUrl)
-        .replace('{NOM_PROSPECT}', prospectName);
-    }
+    // Ajouter des instructions finales spécifiques
+    const finalInstructions = `
+═══════════════════════════════════════
+VÉRIFICATION FINALE - CHECKLIST OBLIGATOIRE
+═══════════════════════════════════════
+
+Assure-toi que le site généré inclut ABSOLUMENT :
+
+✅ FICHIERS À LA RACINE :
+- [ ] /googlec26cc7c36bbf5118.html avec le contenu exact : "google-site-verification: googlec26cc7c36bbf5118.html"
+- [ ] /sitemap.xml généré dynamiquement avec TOUTES les pages
+- [ ] /robots.txt avec référence au sitemap
+
+✅ FONCTIONNALITÉS TECHNIQUES :
+- [ ] Sidebar qui remonte automatiquement en haut lors de la navigation entre pages
+- [ ] useEffect hook sur le changement de route pour scroll to top
+- [ ] window.scrollTo(0, 0) et sidebar.scrollTop = 0 implémentés
+
+✅ SEO COMPLET :
+- [ ] Balises meta uniques par page (title, description, keywords)
+- [ ] Open Graph et Twitter Cards sur toutes les pages
+- [ ] Schema.org JSON-LD adapté au secteur "${options?.sectorActivity || 'activité'}"
+- [ ] Mots-clés géolocalisés pour "${options?.geoZone || 'zone géographique'}"
+- [ ] UN SEUL H1 par page avec mot-clé principal
+
+✅ CONTENU OPTIMISÉ :
+- [ ] Minimum 1000 mots sur la page d'accueil
+- [ ] Minimum 500 mots sur les pages internes
+- [ ] FAQ avec schema FAQPage
+- [ ] Densité de mots-clés respectée (2-3% principal, 1-2% secondaires)
+
+✅ PERFORMANCE :
+- [ ] Images en WebP avec lazy loading
+- [ ] Minification CSS/JS/HTML
+- [ ] Score PageSpeed > 90
+- [ ] Mobile-first responsive
+
+✅ PAGES LÉGALES :
+- [ ] Mentions légales avec : ${prospectName} - Hébergeur : Ionos
+- [ ] Politique de confidentialité RGPD
+- [ ] CGV/CGU
+- [ ] Cookie consent banner
+
+✅ ANIMATIONS FRAMER MOTION :
+- [ ] CustomCursor avec effet halo
+- [ ] Animations au scroll sur toutes les sections
+- [ ] Transitions fluides entre pages
+- [ ] Effets parallax et 3D
+
+NE PAS OUBLIER :
+- Le fichier Google DOIT être accessible à : /googlec26cc7c36bbf5118.html
+- La sidebar DOIT remonter en haut automatiquement au changement de page
+- Le sitemap.xml DOIT lister toutes les URLs du site
+- JAMAIS inventer de données - utiliser UNIQUEMENT le contenu scrapé
+
+Client : ${prospectName}
+Secteur : ${options?.sectorActivity || 'À adapter selon le contenu'}
+Zone : ${options?.geoZone || 'À adapter selon le contenu'}
+`;
 
     const finalPrompt = `${claudeResponse}\n\n${finalInstructions}`;
 
-    logger.info(`🔨 Construction prompt final : ${finalPrompt.length} caractères`);
+    logger.info(`🔨 Construction prompt final SEO optimisé : ${finalPrompt.length} caractères`);
     
     return finalPrompt;
   } catch (error: any) {

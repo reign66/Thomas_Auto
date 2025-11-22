@@ -68,6 +68,9 @@ export async function generateSiteWorkflow(
         {
           siteType: prospectData.siteType || 'Très moderne',
           directorName: prospectData.name,
+          sectorActivity: prospectData.sectorActivity,
+          geoZone: prospectData.geoZone,
+          logoUrl: prospectData.logoUrl || undefined,
         }
       );
     } catch (error: any) {
