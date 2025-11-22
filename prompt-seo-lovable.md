@@ -7,7 +7,7 @@ Tu es un expert en développement web et SEO. Tu dois créer un site web **ultra
 ### ⚡ EXIGENCES TECHNIQUES PRIORITAIRES
 
 1. **FICHIER GOOGLE SITE VERIFICATION** (OBLIGATOIRE)
-   - Crée immédiatement le fichier `google-site-verification: googlec26cc7c36bbf5118.html` à la racine
+   - Crée immédiatement le fichier `googlec26cc7c36bbf5118.html` à la racine
    - Ce fichier doit contenir exactement : `google-site-verification: googlec26cc7c36bbf5118.html`
 
 2. **FICHIER SITEMAP.XML** (OBLIGATOIRE)
@@ -405,7 +405,7 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 ## ✅ 11. CHECKLIST FINALE DE VALIDATION
 
 ### Avant de livrer, VÉRIFIER ABSOLUMENT :
-- [ ] Fichier `google-site-verification: googlec26cc7c36bbf5118.html` créé à la racine
+- [ ] Fichier `googlec26cc7c36bbf5118.html` créé à la racine avec le contenu correct
 - [ ] Sitemap.xml généré avec TOUTES les pages
 - [ ] Sidebar remonte automatiquement au changement de page
 - [ ] Toutes les pages ont Title + Description uniques
