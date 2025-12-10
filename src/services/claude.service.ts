@@ -49,7 +49,7 @@ export async function analyzeWebsite(
 
     // Appeler Claude avec le prompt SEO optimisé
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-haiku-4-5',
       max_tokens: 8192, // Augmenté pour permettre des réponses plus détaillées
       temperature: 0.7, // Pour plus de créativité dans les suggestions SEO
       messages: [
