@@ -82,34 +82,41 @@ export async function analyzeWebsite(
     
     if (siteType === 'Très moderne') {
       animationsChecklist = `
-✅ ANIMATIONS FRAMER MOTION (TRÈS MODERNE) :
+✅ STYLE TRÈS MODERNE - ANIMATIONS AVANCÉES :
 - [ ] CustomCursor avec effet halo lumineux
 - [ ] Animations au scroll sur TOUTES les sections
 - [ ] Transitions fluides entre pages avec AnimatePresence
-- [ ] Effets parallax et 3D sur les cards
+- [ ] Effets parallax et 3D sur les cards (tilt effect)
 - [ ] Glassmorphism et gradients animés
-- [ ] CountUp animé pour les statistiques
-- [ ] Micro-interactions sur tous les éléments`;
+- [ ] CountUp animé pour TOUS les chiffres
+- [ ] Micro-interactions sur tous les éléments cliquables
+- [ ] TextReveal pour les titres principaux
+- [ ] Floating elements et shapes animés`;
     } else if (siteType === 'Moderne') {
       animationsChecklist = `
-✅ ANIMATIONS SOBRES (MODERNE) :
-- [ ] PAS de curseur personnalisé
-- [ ] Fade-in simple au scroll
-- [ ] Hover subtils sur les boutons (scale: 1.02)
-- [ ] Transitions courtes (0.2-0.3s)
-- [ ] PAS d'effets 3D complexes
-- [ ] Focus sur la lisibilité et l'UX`;
+✅ STYLE MODERNE - ANIMATIONS ÉLÉGANTES :
+- [ ] Animations fade-in au scroll sur les sections
+- [ ] Hover élégants sur boutons (scale: 1.03, shadow)
+- [ ] Cards avec élévation au hover
+- [ ] Transitions fluides (0.3s ease)
+- [ ] CountUp pour les statistiques
+- [ ] Icônes modernes générées (Lucide React)
+- [ ] Stagger animations sur les grilles
+- [ ] Smooth reveal avec Intersection Observer
+- [ ] Dégradés subtils et ombres élégantes`;
     } else if (siteType === 'Rassurant') {
       animationsChecklist = `
-✅ DESIGN RASSURANT - ÉLÉMENTS OBLIGATOIRES :
-- [ ] PAS d'animations distrayantes
-- [ ] Section équipe avec photos
-- [ ] Section services détaillée avec bénéfices
-- [ ] Témoignages clients mis en avant
+✅ STYLE RASSURANT - MODERNE SOBRE :
+- [ ] Animations subtiles fade-in au scroll
+- [ ] Hover élégants mais discrets sur les boutons
+- [ ] Transitions douces (0.3s ease)
+- [ ] CountUp pour les chiffres de réassurance
+- [ ] Section équipe/humain mise en avant
+- [ ] Témoignages clients visibles
 - [ ] Éléments de réassurance (expérience, certifications)
 - [ ] Numéro de téléphone VISIBLE en header
-- [ ] Design épuré avec beaucoup d'espace blanc
-- [ ] Couleurs sobres du site original respectées`;
+- [ ] Design épuré avec espaces blancs
+- [ ] Icônes professionnelles pour les services`;
     }
 
     // Ajouter des instructions finales spécifiques
@@ -165,12 +172,28 @@ ${animationsChecklist}
 - [ ] Images du site original intégrées
 - [ ] Ambiance visuelle cohérente avec l'original
 
+✅ RECRÉATION COMPLÈTE DU SITE :
+- [ ] TOUTES les pages du site original recréées
+- [ ] Navigation fonctionnelle (tous les liens marchent)
+- [ ] Chaque bouton renvoie vers une vraie page
+- [ ] Menu avec tous les liens vers les pages créées
+- [ ] Footer avec liens fonctionnels
+- [ ] Breadcrumbs sur chaque page
+- [ ] Page 404 personnalisée
+
+✅ GÉNÉRATION D'ASSETS :
+- [ ] Icônes modernes pour chaque service (Lucide/Heroicons)
+- [ ] Images du site original utilisées
+- [ ] Logo client en header, footer, favicon
+
 NE PAS OUBLIER :
 - Le fichier Google DOIT être accessible à : /googlec26cc7c36bbf5118.html
 - La sidebar DOIT remonter en haut automatiquement au changement de page
 - Le sitemap.xml DOIT lister toutes les URLs du site
 - JAMAIS inventer de données - utiliser UNIQUEMENT le contenu scrapé
 - RESPECTER la DA et les couleurs du site original
+- CRÉER TOUTES LES PAGES du site original
+- TOUS LES BOUTONS doivent être fonctionnels
 
 Client : ${prospectName}
 Secteur : ${options?.sectorActivity || 'À adapter selon le contenu'}

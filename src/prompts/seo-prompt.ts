@@ -297,157 +297,242 @@ TOUS ces éléments doivent être implémentés en plus des instructions précé
 // ═══════════════════════════════════════
 
 /**
- * TRÈS MODERNE - Beaucoup d'animations, effets visuels avancés
+ * Instructions communes pour TOUS les types de sites
+ */
+export const COMMON_SITE_INSTRUCTIONS = `
+═══════════════════════════════════════
+INSTRUCTIONS COMMUNES - RECRÉATION COMPLÈTE DU SITE
+═══════════════════════════════════════
+
+OBJECTIF : Recréer le site web original de A à Z en le modernisant visuellement.
+
+1. ANALYSE ET RECRÉATION DE TOUTES LES PAGES :
+   - Analyser TOUTES les pages du site original (liens internes)
+   - Créer une page équivalente pour CHAQUE page du site original
+   - Conserver la même structure de navigation
+   - TOUS les boutons et liens doivent pointer vers des pages RÉELLES
+   - Ne jamais créer de liens morts ou de pages placeholder
+
+2. NAVIGATION FONCTIONNELLE :
+   - Menu principal avec TOUS les liens vers les pages créées
+   - Chaque bouton CTA renvoie vers la bonne page (Contact, Services, etc.)
+   - Breadcrumbs fonctionnels sur toutes les pages
+   - Footer avec liens vers toutes les pages principales
+   - Menu mobile hamburger fonctionnel
+
+3. GÉNÉRATION D'ASSETS VISUELS :
+   - Générer des ICÔNES modernes pour chaque service/fonctionnalité
+   - Utiliser des icônes de bibliothèques (Lucide, Heroicons)
+   - Créer des illustrations simples si nécessaire
+   - Badges et éléments graphiques modernes
+   - Formes géométriques décoratives
+
+4. IMAGES ET MÉDIAS :
+   - Utiliser les images fournies du site original
+   - Si images manquantes : utiliser des placeholders de qualité (Unsplash API)
+   - Optimiser toutes les images en WebP
+   - Lazy loading sur toutes les images sauf hero
+   - Alt text descriptif pour le SEO
+
+5. PAGES OBLIGATOIRES À CRÉER :
+   - Page d'accueil (/)
+   - Page À propos (/about ou /a-propos)
+   - Page Services/Produits (/services ou /produits)
+   - Page Contact (/contact)
+   - Pages individuelles pour chaque service si le site original en a
+   - Page Mentions légales (/mentions-legales)
+   - Page Politique de confidentialité (/politique-confidentialite)
+   - Page 404 personnalisée
+   - Toute autre page présente sur le site original
+
+6. COHÉRENCE VISUELLE :
+   - Respecter la charte graphique du site original (couleurs, ambiance)
+   - Moderniser le design tout en gardant l'identité de marque
+   - Logo du client utilisé partout (header, footer, favicon)
+   - Palette de couleurs cohérente sur toutes les pages
+`;
+
+/**
+ * TRÈS MODERNE - Maximum d'animations et effets visuels impressionnants
  */
 export const DESIGN_TRES_MODERNE = `
-7. ANIMATIONS AVANCÉES (Framer Motion) - STYLE TRÈS MODERNE :
+7. STYLE "TRÈS MODERNE" - ANIMATIONS AVANCÉES ET EFFETS WOW :
 
-Ce site doit être ULTRA ANIMÉ avec des effets visuels impressionnants.
+Ce site doit impressionner visuellement avec des animations fluides et des effets modernes.
+Niveau d'animation : MAXIMUM - Site vitrine haut de gamme, agence créative.
 
-Composants animés OBLIGATOIRES :
+COMPOSANTS ANIMÉS OBLIGATOIRES :
 - CustomCursor avec effet halo lumineux suivant la souris
 - AnimatedButton avec rebond (stiffness: 400, damping: 10)
-- MagneticCard avec rotation 3D au hover (rotateX, rotateY)
+- MagneticCard avec rotation 3D au hover (rotateX, rotateY jusqu'à 15deg)
 - ParallaxContainer pour effets de profondeur multicouches
 - GlowingBorder sur les éléments interactifs
-- AnimatedGradient en arrière-plan
-- TextReveal pour les titres (caractère par caractère)
-- Morphing shapes en SVG animé
+- AnimatedGradient en arrière-plan des sections
+- TextReveal pour les titres (caractère par caractère ou mot par mot)
+- Morphing shapes en SVG animé dans le hero
+- FloatingElements avec animation infinie subtile
 
-Patterns d'animation OBLIGATOIRES :
+PATTERNS D'ANIMATION OBLIGATOIRES :
 - Fade-In-Up pour les sections (duration: 0.8, ease: "easeOut")
-- Blur-In pour les titres (blur: 10px → 0px)
-- Scale-In pour les cards (scale: 0.8 → 1)
+- Blur-In pour les titres principaux (blur: 10px → 0px)
+- Scale-In pour les cards (scale: 0.85 → 1)
 - Slide-In-Left/Right pour les listes alternées
-- Stagger pour les grilles (delayChildren: 0.1)
-- CountUp animé pour les statistiques
-- Parallax scrolling sur les images
-- 3D tilt effect au hover sur les cards
-- Smooth page transitions avec AnimatePresence
-- Floating elements avec animation infinie
-- Glassmorphism avec backdrop-filter
-- Gradient animations sur les boutons
+- Stagger pour les grilles (delayChildren: 0.1, staggerChildren: 0.08)
+- CountUp animé pour TOUS les chiffres/statistiques
+- Parallax scrolling sur les images de fond
+- 3D tilt effect au hover sur toutes les cards
+- Page transitions fluides avec AnimatePresence
+- Glassmorphism avec backdrop-filter: blur(10px)
+- Gradient animations sur les boutons principaux
+- Smooth scroll avec effet de easing personnalisé
 
-Effets visuels avancés :
-- Noise/grain texture subtile en overlay
-- Cursor trail effect
-- Smooth scroll avec Lenis
-- Reveal animations au scroll (every section)
+EFFETS VISUELS AVANCÉS :
+- Noise/grain texture subtile en overlay (opacity: 0.03)
+- Cursor trail effect optionnel
+- Reveal animations au scroll sur CHAQUE section
 - Micro-interactions sur tous les éléments cliquables
+- Hover states élaborés avec transitions multiples
+- Ombres dynamiques qui changent au hover
+- Backgrounds avec dégradés animés
+- Borders avec effet glow au focus
+
+STYLE VISUEL :
+- Design audacieux et créatif
+- Contrastes forts
+- Typographie moderne et expressive
+- Effets de superposition et de profondeur
+- Sections pleine largeur avec visuels impactants
 `;
 
 /**
- * MODERNE - Animations sobres, professionnelles
+ * MODERNE - Design professionnel avec animations élégantes
  */
 export const DESIGN_MODERNE = `
-7. ANIMATIONS SOBRES (Framer Motion) - STYLE MODERNE PROFESSIONNEL :
+7. STYLE "MODERNE" - ANIMATIONS ÉLÉGANTES ET PROFESSIONNELLES :
 
-Ce site doit être élégant avec des animations SUBTILES et professionnelles.
-PAS d'effets tape-à-l'œil. Privilégier la lisibilité et l'expérience utilisateur fluide.
+Ce site doit être moderne, professionnel et visuellement attrayant.
+Niveau d'animation : MOYEN - Animations élégantes sans excès.
 
-Composants animés (sobres) :
-- Pas de CustomCursor personnalisé (garder le curseur natif)
-- Boutons avec hover simple (scale: 1.02, transition: 0.2s)
-- Cards avec élévation au hover (shadow + translateY: -4px)
-- Pas de rotation 3D complexe
+COMPOSANTS ANIMÉS :
+- Boutons avec hover élégant (scale: 1.03, shadow augmentée, transition: 0.3s)
+- Cards avec élévation au hover (shadow + translateY: -8px)
+- Navigation avec underline animé au hover
+- Icons avec rotation ou scale subtil au hover
+- Tooltips avec fade-in élégant
 
-Patterns d'animation AUTORISÉS :
-- Fade-In simple pour les sections (duration: 0.5)
-- Pas de Blur-In
-- Scale léger pour les cards (0.98 → 1)
-- Slide-In subtil (translateY: 20px → 0)
-- Stagger léger pour les grilles (delayChildren: 0.05)
-- CountUp pour les statistiques uniquement
+PATTERNS D'ANIMATION À UTILISER :
+- Fade-In-Up pour les sections (duration: 0.6)
+- Scale-In pour les cards (scale: 0.95 → 1)
+- Slide-In pour les éléments de liste (translateX: -30px → 0)
+- Stagger pour les grilles (delayChildren: 0.08)
+- CountUp pour les statistiques
+- Smooth reveal au scroll avec Intersection Observer
+- Transitions de page fluides
 
-À ÉVITER ABSOLUMENT :
-- Effets parallax complexes
-- Curseur personnalisé
-- Animations infinies distrayantes
-- 3D transforms excessifs
-- Glassmorphism exagéré
-- Trop de mouvement
+EFFETS VISUELS MODERNES :
+- Ombres douces et élégantes (shadow-lg, shadow-xl)
+- Dégradés subtils sur les fonds
+- Hover states visibles mais pas exagérés
+- Micro-animations sur les icônes
+- Borders arrondis modernes (rounded-xl, rounded-2xl)
+- Glassmorphism léger sur certains éléments (backdrop-blur: 8px)
 
-Style visuel :
-- Design épuré et aéré
-- Espaces blancs généreux
-- Typographie claire et lisible
-- Couleurs du site original respectées
-- Transitions douces (0.2-0.3s max)
-- Focus sur le contenu, pas sur les effets
+GÉNÉRATION D'ÉLÉMENTS VISUELS :
+- Icônes modernes pour chaque service (Lucide React)
+- Badges et tags stylisés
+- Séparateurs de sections créatifs
+- Illustrations géométriques simples
+- Backgrounds avec patterns subtils
+
+STYLE VISUEL :
+- Design clean et professionnel
+- Espaces blancs bien dosés
+- Typographie moderne et lisible
+- Couleurs du site original + accents modernes
+- Hiérarchie visuelle claire
+- Équilibre entre contenu et visuels
 `;
 
 /**
- * RASSURANT - Design épuré, centré services/équipe, images business
+ * RASSURANT - Design moderne mais sobre, centré sur la confiance
  */
 export const DESIGN_RASSURANT = `
-7. DESIGN RASSURANT ET PROFESSIONNEL :
+7. STYLE "RASSURANT" - MODERNE SOBRE, CENTRÉ SUR LA CONFIANCE :
 
-Ce site doit RASSURER le visiteur. Design épuré, sérieux, centré sur la confiance.
-OBJECTIF : Montrer le professionnalisme, l'expertise, l'humain derrière l'entreprise.
+Ce site doit rassurer le visiteur tout en étant moderne et professionnel.
+Niveau d'animation : LÉGER - Animations présentes mais subtiles et rassurantes.
+OBJECTIF : Inspirer confiance, montrer le professionnalisme et l'humain.
 
-STYLE VISUEL OBLIGATOIRE :
-- Design ÉPURÉ et MINIMALISTE
-- Beaucoup d'espace blanc (padding généreux)
-- Couleurs sobres du site original + tons neutres (gris, beige, blanc cassé)
-- Typographie classique et très lisible (pas de fonts fantaisie)
-- Pas d'animations distrayantes
+ANIMATIONS PRÉSENTES MAIS SUBTILES :
+- Fade-in au scroll pour les sections (duration: 0.5)
+- Hover élégant sur les boutons (scale: 1.02, shadow légère)
+- Cards avec légère élévation au hover
+- Transitions douces sur tous les éléments (0.3s ease)
+- CountUp pour les chiffres clés (années d'expérience, clients, etc.)
+- Icônes avec légère animation au hover
 
-ANIMATIONS MINIMALES :
-- Uniquement fade-in au scroll (duration: 0.4s)
-- Hover subtil sur les boutons (opacity ou léger scale)
-- Pas de curseur personnalisé
-- Pas d'effets 3D
-- Pas de parallax
-- Transitions très courtes (0.15-0.2s)
+CE QU'IL FAUT ÉVITER :
+- Curseur personnalisé (garder le natif)
+- Effets 3D complexes
+- Parallax agressif
+- Animations infinies distrayantes
+- Trop de mouvement simultané
 
-CONTENU À METTRE EN AVANT (PRIORITÉ) :
+ÉLÉMENTS DE RÉASSURANCE OBLIGATOIRES :
 
-1. SECTION ÉQUIPE OBLIGATOIRE :
-   - Photos de l'équipe si disponibles dans les images
-   - Sinon, utiliser des images professionnelles de travail d'équipe
-   - Présentation des membres clés avec leurs rôles
+1. HEADER RASSURANT :
+   - Logo bien visible
+   - Numéro de téléphone cliquable en évidence
+   - Menu clair et simple
+   - Bouton CTA visible (Devis, Contact)
+
+2. SECTION ÉQUIPE/HUMAIN :
+   - Photos de l'équipe ou du dirigeant
+   - Présentation personnelle et chaleureuse
+   - "Qui sommes-nous" mis en avant
    - Créer une connexion humaine
 
-2. SECTION SERVICES DÉTAILLÉE :
-   - Chaque service avec icône sobre
-   - Description claire des bénéfices client
-   - Images en lien avec chaque service
-   - Processus de travail expliqué
-
-3. TÉMOIGNAGES/AVIS CLIENTS :
-   - Section prominente avec citations
-   - Photos clients si disponibles
-   - Étoiles de notation
-   - Logos clients/partenaires
-
-4. ÉLÉMENTS DE RÉASSURANCE :
-   - Années d'expérience
-   - Nombre de clients satisfaits
+3. PREUVES SOCIALES :
+   - Témoignages clients avec photos si possible
+   - Logos des clients/partenaires
+   - Notes et avis (étoiles)
    - Certifications et labels
-   - Garanties proposées
-   - Numéro de téléphone VISIBLE en header
+   - Années d'expérience
+   - Nombre de projets/clients
 
-5. IMAGES À UTILISER :
-   - Images du travail réel de l'entreprise
-   - Photos de l'équipe au travail
-   - Réalisations/projets concrets
-   - Éviter les photos stock génériques
-   - Privilégier l'authenticité
+4. SERVICES DÉTAILLÉS :
+   - Chaque service avec icône moderne
+   - Description claire des bénéfices
+   - Processus de travail expliqué
+   - Tarifs ou fourchettes si disponibles
 
-STRUCTURE DE PAGE RECOMMANDÉE :
-- Hero sobre avec proposition de valeur claire
-- Section "Pourquoi nous choisir" avec icônes
-- Services présentés en grille simple
-- Témoignages clients
-- Section équipe avec photos
-- FAQ pour répondre aux questions fréquentes
-- Call-to-action clair (contact/devis)
+5. FAQ RASSURANTE :
+   - Questions fréquentes avec réponses
+   - Lever les objections courantes
+   - Schema FAQPage pour le SEO
 
-PALETTE DE COULEURS :
-- Reprendre les couleurs principales du site original
-- Ajouter du blanc/gris clair pour l'espace
-- Une couleur d'accent pour les CTA
-- Éviter les couleurs vives ou agressives
+GÉNÉRATION D'ÉLÉMENTS VISUELS :
+- Icônes professionnelles pour chaque service
+- Badges de confiance (garantie, certifications)
+- Illustrations sobres et professionnelles
+- Photos de qualité (équipe, réalisations)
+
+STYLE VISUEL :
+- Design épuré mais moderne
+- Beaucoup d'espace blanc (respiration)
+- Couleurs du site original + tons neutres apaisants
+- Typographie très lisible (corps 16-18px)
+- Contraste élevé pour la lisibilité
+- Visuels authentiques (pas trop "stock")
+
+STRUCTURE DE PAGE TYPE :
+1. Hero avec proposition de valeur claire + CTA
+2. Section "Pourquoi nous choisir" (3-4 points forts)
+3. Services en grille claire
+4. Témoignages clients
+5. Section équipe/à propos
+6. FAQ
+7. Call-to-action final + Contact
 `;
 
 export function generateEnhancedSEOPrompt(
@@ -479,6 +564,9 @@ export function generateEnhancedSEOPrompt(
     ? colors.join(', ')
     : '[À extraire du site original]';
 
+  // Combiner instructions communes + instructions spécifiques au type
+  const fullDesignInstructions = `${COMMON_SITE_INSTRUCTIONS}\n\n${designInstructions}`;
+
   // Remplacer les variables dans le template
   let prompt = SEO_PROMPT_TEMPLATE
     .replace(/{URL_DU_SITE}/g, siteUrl)
@@ -502,7 +590,7 @@ export function generateEnhancedSEOPrompt(
     .replace(/{GA_ID}/g, 'G-XXXXXXXXXX')
     .replace(/{SERVICE}/g, sectorActivity || 'service')
     .replace(/{REGION}/g, geoZone || 'région')
-    .replace(/{DESIGN_INSTRUCTIONS}/g, designInstructions);
+    .replace(/{DESIGN_INSTRUCTIONS}/g, fullDesignInstructions);
 
   // Ajouter les instructions SEO supplémentaires
   const enhancedInstructions = ENHANCED_SEO_INSTRUCTIONS
