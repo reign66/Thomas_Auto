@@ -1,5 +1,5 @@
 import { getProspectByName, ProspectData, updateProspectByPageId } from '../services/notion.service';
-import { scrapeWebsite } from '../services/scraper.service';
+import { scrapeWebsite, ScrapedData } from '../services/scraper.service';
 import { analyzeWebsite } from '../services/claude.service';
 import { generateLovableUrl } from '../services/lovable.service';
 import { sendLovableUrlEmail, sendErrorEmail } from '../services/email.service';
@@ -46,10 +46,11 @@ export async function generateSiteWorkflow(
       throw new Error(errorMsg);
     }
 
-    // 2. Scraper le site web
-    let scrapedContent: string;
+    // 2. Scraper le site web (récupère contenu + logo + images + couleurs)
+    let scrapedData: ScrapedData;
     try {
-      scrapedContent = await scrapeWebsite(prospectData.website);
+      scrapedData = await scrapeWebsite(prospectData.website);
+      logger.info(`📊 Scraping terminé : ${scrapedData.images.length} images, logo: ${scrapedData.logoUrl ? 'Oui' : 'Non'}`);
     } catch (error: any) {
       const errorMsg = `Erreur lors du scraping du site : ${prospectData.website}`;
       const errorDetails = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
@@ -58,19 +59,28 @@ export async function generateSiteWorkflow(
       throw error;
     }
 
+    // Déterminer le logo à utiliser (priorité : Notion > Scraping)
+    const logoUrl = prospectData.logoUrl || scrapedData.logoUrl;
+    if (logoUrl) {
+      logger.info(`🖼️  Logo final : ${logoUrl.substring(0, 50)}...`);
+    } else {
+      logger.warn(`⚠️  Aucun logo trouvé pour ${prospectData.name}`);
+    }
+
     // 3. Analyser avec Claude
     let claudePrompt: string;
     try {
       claudePrompt = await analyzeWebsite(
         prospectData.website,
-        scrapedContent,
+        scrapedData.content,
         prospectData.name,
         {
           siteType: prospectData.siteType || 'Très moderne',
           directorName: prospectData.name,
           sectorActivity: prospectData.sectorActivity,
           geoZone: prospectData.geoZone,
-          logoUrl: prospectData.logoUrl || undefined,
+          logoUrl: logoUrl || undefined,
+          colors: scrapedData.colors,
         }
       );
     } catch (error: any) {
@@ -81,8 +91,8 @@ export async function generateSiteWorkflow(
       throw error;
     }
 
-    // 4. Générer l'URL Lovable
-    const lovableUrl = generateLovableUrl(claudePrompt, prospectData.logoUrl);
+    // 4. Générer l'URL Lovable avec logo + images
+    const lovableUrl = generateLovableUrl(claudePrompt, logoUrl, scrapedData.images);
 
     logger.info(`🔗 URL Lovable générée`);
     logger.info('========================================');

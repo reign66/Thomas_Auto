@@ -35,7 +35,7 @@ export interface ProspectData {
   email: string;
   phone: string;
   logoUrl: string | null;
-  siteType: 'Moderne' | 'Très moderne' | null;
+  siteType: 'Moderne' | 'Très moderne' | 'Rassurant' | null;
   sectorActivity?: string;
   geoZone?: string;
 }
@@ -77,12 +77,12 @@ function extractProspectDataFromProperties(properties: any, prospectName?: strin
     }
   }
 
-  // Extraire le type de site (select: "Moderne" | "Très moderne")
-  let siteType: 'Moderne' | 'Très moderne' | null = null;
+  // Extraire le type de site (select: "Moderne" | "Très moderne" | "Rassurant")
+  let siteType: 'Moderne' | 'Très moderne' | 'Rassurant' | null = null;
   const siteTypeProperty = properties?.['Type de site'];
   if (siteTypeProperty && siteTypeProperty.type === 'select') {
     const selected = siteTypeProperty.select?.name as string | undefined;
-    if (selected === 'Moderne' || selected === 'Très moderne') {
+    if (selected === 'Moderne' || selected === 'Très moderne' || selected === 'Rassurant') {
       siteType = selected;
     }
   }

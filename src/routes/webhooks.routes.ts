@@ -153,9 +153,38 @@ interface NotionWebhookRequest extends Request {
 router.post('/notion', async (req: NotionWebhookRequest, res: Response) => {
   try {
     logger.info('🔔 Webhook Notion reçu');
-    logger.debug('Body reçu:', JSON.stringify(req.body, null, 2).substring(0, 500));
+    
+    // Parfois le body est mal parsé (chaque caractère indexé séparément)
+    // On doit le reconstruire si c'est le cas
+    let payload = req.body;
+    
+    // Détecter si le body est une chaîne indexée par caractères ({"0":"{","1":"\n",...})
+    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      const keys = Object.keys(payload);
+      if (keys.length > 0 && keys.every(key => /^\d+$/.test(key))) {
+        logger.info('⚠️ Body détecté comme chaîne indexée, reconstruction...');
+        // Reconstruire la chaîne depuis les caractères indexés
+        const maxIndex = Math.max(...keys.map(k => parseInt(k, 10)));
+        let reconstructed = '';
+        for (let i = 0; i <= maxIndex; i++) {
+          if (payload[i] !== undefined) {
+            reconstructed += payload[i];
+          }
+        }
+        try {
+          payload = JSON.parse(reconstructed);
+          logger.info('✅ Body reconstruit avec succès');
+        } catch (e) {
+          logger.error('❌ Impossible de parser le body reconstruit');
+          logger.error('Body reconstruit (début):', reconstructed.substring(0, 500));
+        }
+      }
+    }
+    
+    logger.debug('Body parsé:', JSON.stringify(payload, null, 2).substring(0, 500));
 
-    // Notion peut envoyer différents formats de webhook selon le type d'automatisation
+    // Notion envoie différents formats de webhook selon le type d'automatisation
+    // Format automation button : { source: {...}, data: { object: "page", id: "...", properties: {...} } }
     // Format 1 : { page_id: "..." } (automatisation simple)
     // Format 2 : { payload: { page_id: "..." } } (automatisation avec payload)
     // Format 3 : { data: { page_id: "..." } } (autre format possible)
@@ -163,22 +192,25 @@ router.post('/notion', async (req: NotionWebhookRequest, res: Response) => {
     let pageId: string | undefined;
     
     // Essayer différents formats
-    if (req.body?.page_id) {
-      pageId = req.body.page_id;
-    } else if (req.body?.payload?.page_id) {
-      pageId = req.body.payload.page_id;
-    } else if (req.body?.data?.page_id) {
-      pageId = req.body.data.page_id;
-    } else if (req.body?.page?.id) {
-      pageId = req.body.page.id;
-    } else if (req.body?.id) {
+    if (payload?.data?.id && payload?.data?.object === 'page') {
+      // Format automation button Notion
+      pageId = payload.data.id;
+    } else if (payload?.page_id) {
+      pageId = payload.page_id;
+    } else if (payload?.payload?.page_id) {
+      pageId = payload.payload.page_id;
+    } else if (payload?.data?.page_id) {
+      pageId = payload.data.page_id;
+    } else if (payload?.page?.id) {
+      pageId = payload.page.id;
+    } else if (payload?.id) {
       // Si c'est directement l'ID de la page
-      pageId = req.body.id;
+      pageId = payload.id;
     }
 
     if (!pageId) {
       logger.error('❌ Page ID manquant dans le webhook Notion');
-      logger.error('Structure du body:', JSON.stringify(req.body, null, 2));
+      logger.error('Structure du body:', JSON.stringify(payload, null, 2).substring(0, 1000));
       return res.status(400).json({
         success: false,
         error: { message: 'Page ID manquant dans le webhook' },
