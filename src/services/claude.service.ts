@@ -15,11 +15,12 @@ export async function analyzeWebsite(
   scrapedContent: string,
   prospectName: string,
   options?: { 
-    siteType?: 'Moderne' | 'Très moderne'; 
+    siteType?: 'Moderne' | 'Très moderne' | 'Rassurant'; 
     directorName?: string;
     sectorActivity?: string;
     geoZone?: string;
     logoUrl?: string;
+    colors?: string[];
   }
 ): Promise<string> {
   try {
@@ -27,15 +28,19 @@ export async function analyzeWebsite(
     logger.info(`📊 Secteur d'activité : ${options?.sectorActivity || 'À déterminer'}`);
     logger.info(`📍 Zone géographique : ${options?.geoZone || 'À déterminer'}`);
     logger.info(`🎨 Type de site : ${options?.siteType || 'Très moderne'}`);
+    if (options?.colors?.length) {
+      logger.info(`🎨 Couleurs détectées : ${options.colors.join(', ')}`);
+    }
 
-    // Générer le prompt SEO optimisé
+    // Générer le prompt SEO optimisé avec le type de design approprié
     const seoPrompt = generateEnhancedSEOPrompt(
       siteUrl,
       scrapedContent,
       prospectName,
       options?.sectorActivity,
       options?.geoZone,
-      options?.siteType || 'Très moderne'
+      options?.siteType || 'Très moderne',
+      options?.colors
     );
 
     // Ajouter les informations du logo si disponible
@@ -71,11 +76,49 @@ export async function analyzeWebsite(
 
     logger.info(`✅ Réponse Claude : ${claudeResponse.length} caractères`);
 
+    // Instructions d'animations selon le type de site
+    let animationsChecklist = '';
+    const siteType = options?.siteType || 'Très moderne';
+    
+    if (siteType === 'Très moderne') {
+      animationsChecklist = `
+✅ ANIMATIONS FRAMER MOTION (TRÈS MODERNE) :
+- [ ] CustomCursor avec effet halo lumineux
+- [ ] Animations au scroll sur TOUTES les sections
+- [ ] Transitions fluides entre pages avec AnimatePresence
+- [ ] Effets parallax et 3D sur les cards
+- [ ] Glassmorphism et gradients animés
+- [ ] CountUp animé pour les statistiques
+- [ ] Micro-interactions sur tous les éléments`;
+    } else if (siteType === 'Moderne') {
+      animationsChecklist = `
+✅ ANIMATIONS SOBRES (MODERNE) :
+- [ ] PAS de curseur personnalisé
+- [ ] Fade-in simple au scroll
+- [ ] Hover subtils sur les boutons (scale: 1.02)
+- [ ] Transitions courtes (0.2-0.3s)
+- [ ] PAS d'effets 3D complexes
+- [ ] Focus sur la lisibilité et l'UX`;
+    } else if (siteType === 'Rassurant') {
+      animationsChecklist = `
+✅ DESIGN RASSURANT - ÉLÉMENTS OBLIGATOIRES :
+- [ ] PAS d'animations distrayantes
+- [ ] Section équipe avec photos
+- [ ] Section services détaillée avec bénéfices
+- [ ] Témoignages clients mis en avant
+- [ ] Éléments de réassurance (expérience, certifications)
+- [ ] Numéro de téléphone VISIBLE en header
+- [ ] Design épuré avec beaucoup d'espace blanc
+- [ ] Couleurs sobres du site original respectées`;
+    }
+
     // Ajouter des instructions finales spécifiques
     const finalInstructions = `
 ═══════════════════════════════════════
 VÉRIFICATION FINALE - CHECKLIST OBLIGATOIRE
 ═══════════════════════════════════════
+
+TYPE DE DESIGN : ${siteType}
 
 Assure-toi que le site généré inclut ABSOLUMENT :
 
@@ -114,21 +157,25 @@ Assure-toi que le site généré inclut ABSOLUMENT :
 - [ ] CGV/CGU
 - [ ] Cookie consent banner
 
-✅ ANIMATIONS FRAMER MOTION :
-- [ ] CustomCursor avec effet halo
-- [ ] Animations au scroll sur toutes les sections
-- [ ] Transitions fluides entre pages
-- [ ] Effets parallax et 3D
+${animationsChecklist}
+
+✅ DIRECTION ARTISTIQUE (DA) :
+- [ ] Couleurs du site original RESPECTÉES
+- [ ] Logo du client utilisé
+- [ ] Images du site original intégrées
+- [ ] Ambiance visuelle cohérente avec l'original
 
 NE PAS OUBLIER :
 - Le fichier Google DOIT être accessible à : /googlec26cc7c36bbf5118.html
 - La sidebar DOIT remonter en haut automatiquement au changement de page
 - Le sitemap.xml DOIT lister toutes les URLs du site
 - JAMAIS inventer de données - utiliser UNIQUEMENT le contenu scrapé
+- RESPECTER la DA et les couleurs du site original
 
 Client : ${prospectName}
 Secteur : ${options?.sectorActivity || 'À adapter selon le contenu'}
 Zone : ${options?.geoZone || 'À adapter selon le contenu'}
+Type de design : ${siteType}
 `;
 
     const finalPrompt = `${claudeResponse}\n\n${finalInstructions}`;

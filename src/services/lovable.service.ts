@@ -132,11 +132,15 @@ diff --git package.json package.json
 `;
 
 /**
- * Génère l'URL Lovable avec le prompt et optionnellement le logo
+ * Génère l'URL Lovable avec le prompt, le logo et les images
+ * @param prompt - Le prompt généré par Claude
+ * @param logoUrl - URL du logo (prioritaire, sera en première position)
+ * @param images - Tableau d'URLs des images du site (max 9, car logo = 1)
  */
 export function generateLovableUrl(
   prompt: string,
-  logoUrl?: string | null
+  logoUrl?: string | null,
+  images?: string[]
 ): string {
   try {
     logger.info(`🔗 Génération URL Lovable...`);
@@ -150,18 +154,44 @@ export function generateLovableUrl(
     // URL de base
     let url = `https://lovable.dev/?autosubmit=true#prompt=${encodedPrompt}`;
 
-    // Ajouter le logo si fourni
+    // Préparer la liste des images (logo en premier, puis les autres images)
+    // Lovable accepte jusqu'à 10 images
+    const allImages: string[] = [];
+    
+    // 1. Logo en priorité absolue
     if (logoUrl) {
-      const encodedLogo = encodeURIComponent(logoUrl);
-      url += `&images=${encodedLogo}`;
-      logger.info(`🖼️  Logo ajouté à l'URL`);
-    } else {
-      logger.info(`ℹ️  URL sans logo`);
+      allImages.push(logoUrl);
+      logger.info(`🖼️  Logo ajouté en première position`);
+    }
+    
+    // 2. Ajouter les autres images (jusqu'à 10 au total)
+    if (images && images.length > 0) {
+      const remainingSlots = 10 - allImages.length;
+      const imagesToAdd = images
+        .filter(img => img !== logoUrl) // Éviter les doublons avec le logo
+        .slice(0, remainingSlots);
+      
+      allImages.push(...imagesToAdd);
+      logger.info(`🖼️  ${imagesToAdd.length} images supplémentaires ajoutées`);
     }
 
-    // Vérifier la longueur de l'URL (limite ~2000 caractères pour certains navigateurs)
-    if (url.length > 2000) {
-      logger.warn(`⚠️  URL très longue (${url.length} caractères), peut causer des problèmes`);
+    // Ajouter les images à l'URL
+    if (allImages.length > 0) {
+      // Format Lovable : images séparées par des virgules encodées
+      const encodedImages = allImages.map(img => encodeURIComponent(img)).join(',');
+      url += `&images=${encodedImages}`;
+      logger.info(`🖼️  Total : ${allImages.length} image(s) dans l'URL`);
+    } else {
+      logger.info(`ℹ️  URL sans images`);
+    }
+
+    // Vérifier la longueur de l'URL
+    // Note: Les URLs très longues peuvent poser des problèmes
+    // Lovable devrait gérer les URLs longues, mais on log un warning
+    if (url.length > 8000) {
+      logger.warn(`⚠️  URL très longue (${url.length} caractères), peut nécessiter une réduction`);
+    } else if (url.length > 2000) {
+      logger.info(`📏 URL longue mais acceptable (${url.length} caractères)`);
     }
 
     logger.info(`📄 Instructions SSG ajoutées au prompt`);
